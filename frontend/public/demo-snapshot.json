@@ -1,0 +1,825 @@
+{
+  "overview": {
+    "project_name": "Агентная трансформация СеверПром",
+    "company_name": "СеверПром",
+    "industry": "Промышленный холдинг / дистрибуция",
+    "coverage_threshold": 0.55,
+    "version": "MVP 0.1",
+    "mvp_layers": [
+      "strategy",
+      "processes",
+      "data"
+    ],
+    "open_questions_count": 5,
+    "approved_insights_count": 1,
+    "blocked_cases_count": 2,
+    "overall_coverage": 0.53
+  },
+  "layers": [
+    {
+      "id": "strategy",
+      "number": 1,
+      "title": "Стратегия и аппетит к автономии",
+      "short_title": "Стратегия",
+      "description": "Бизнес-цели, приоритетные функции, допустимый риск и граница автономии агентов. Автономия растёт только вместе с доказанной управляемостью.",
+      "practices": [
+        "TOGAF Strategy",
+        "Business Capability Mapping"
+      ],
+      "mvp": true,
+      "blind_spot_hints": [
+        "Целевой уровень автономии по функциям",
+        "Риск-аппетит руководства",
+        "Приоритетные P&L-функции"
+      ]
+    },
+    {
+      "id": "processes",
+      "number": 2,
+      "title": "Процессы и точки решений",
+      "short_title": "Процессы",
+      "description": "Карта процессов, decision points, текущий уровень автоматизации по шкале Parasuraman (уровни 1–5).",
+      "practices": [
+        "Parasuraman et al., 2000",
+        "BPMN / Process Mining"
+      ],
+      "mvp": true,
+      "blind_spot_hints": [
+        "Критические decision points без владельца",
+        "Фактический уровень автоматизации",
+        "Боли и узкие места процессов"
+      ]
+    },
+    {
+      "id": "data",
+      "number": 3,
+      "title": "Данные и знания",
+      "short_title": "Данные",
+      "description": "Источники для RAG, права доступа, качество, метаданные и пригодность данных для агентных сценариев.",
+      "practices": [
+        "DAMA-DMBOK",
+        "Data Quality & Catalog"
+      ],
+      "mvp": true,
+      "blind_spot_hints": [
+        "Качество и свежесть ключевых датасетов",
+        "Права на использование в ИИ",
+        "Локализация ПДн (152-ФЗ)"
+      ]
+    },
+    {
+      "id": "tools",
+      "number": 4,
+      "title": "Инструменты и интеграции",
+      "short_title": "Инструменты",
+      "description": "API, корпоративные системы, действия агента и паттерны tool use.",
+      "practices": [
+        "TOGAF Application/Technology",
+        "Tool-use patterns"
+      ],
+      "mvp": false,
+      "blind_spot_hints": [
+        "Каталог API и SLA",
+        "Права на write-действия агентов",
+        "Реестр российского ПО (КИИ/ГИС)"
+      ]
+    },
+    {
+      "id": "governance",
+      "number": 5,
+      "title": "Управление и надзор",
+      "short_title": "Надзор",
+      "description": "Guardrails, human-in-the-loop, аудит, классификация рисков, распределение ответственности.",
+      "practices": [
+        "NIST AI RMF",
+        "ISO/IEC 42001",
+        "ЦБ РФ Кодекс этики ИИ"
+      ],
+      "mvp": false,
+      "blind_spot_hints": [
+        "HITL для денег, договоров, доступов, ПДн",
+        "Владелец / разработчик / оператор агента",
+        "Аудит действий и инцидентов"
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "id": "doc-strategy-2025",
+      "title": "Стратегия СеверПром 2025–2027",
+      "format": "pdf",
+      "uploaded_at": "2025-11-02",
+      "version": 2,
+      "replaces_id": "doc-strategy-2024",
+      "layers": [
+        "strategy",
+        "governance"
+      ],
+      "freshness_days": 16,
+      "size_label": "2.4 МБ",
+      "summary": "Цели роста EBITDA, приоритет цифровых каналов, риск-аппетит «умеренный».",
+      "status": "ready"
+    },
+    {
+      "id": "doc-bpm-sales",
+      "title": "Регламент процесса «Заказ → Отгрузка»",
+      "format": "docx",
+      "uploaded_at": "2025-10-18",
+      "version": 3,
+      "replaces_id": null,
+      "layers": [
+        "processes",
+        "tools"
+      ],
+      "freshness_days": 31,
+      "size_label": "890 КБ",
+      "summary": "12 шагов, 4 точки согласования, SLA 48 ч, узкое место — кредитный контроль.",
+      "status": "ready"
+    },
+    {
+      "id": "doc-data-catalog",
+      "title": "Каталог корпоративных данных (выдержка)",
+      "format": "xlsx",
+      "uploaded_at": "2025-09-05",
+      "version": 1,
+      "replaces_id": null,
+      "layers": [
+        "data"
+      ],
+      "freshness_days": 74,
+      "size_label": "1.1 МБ",
+      "summary": "42 датасета; 8 с ПДн; качество «клиенты» — 72%; MDM в пилоте.",
+      "status": "ready"
+    },
+    {
+      "id": "doc-it-landscape",
+      "title": "Карта ИС и интеграций",
+      "format": "pptx",
+      "uploaded_at": "2025-08-20",
+      "version": 1,
+      "replaces_id": null,
+      "layers": [
+        "tools",
+        "data"
+      ],
+      "freshness_days": 90,
+      "size_label": "3.6 МБ",
+      "summary": "ERP 1С:УХ, CRM Bitrix24, WMS, шина Kafka; 37 API без единого каталога SLA.",
+      "status": "ready"
+    },
+    {
+      "id": "doc-ai-policy-draft",
+      "title": "Черновик политики ИИ (не утверждён)",
+      "format": "pdf",
+      "uploaded_at": "2025-11-10",
+      "version": 1,
+      "replaces_id": null,
+      "layers": [
+        "governance",
+        "strategy"
+      ],
+      "freshness_days": 8,
+      "size_label": "410 КБ",
+      "summary": "HITL для финансов заявлен; распределение ответственности не зафиксировано.",
+      "status": "ready"
+    }
+  ],
+  "facts": [
+    {
+      "id": "f1",
+      "text": "Целевой рост EBITDA +12% к 2027 за счёт операционной эффективности и цифровых каналов.",
+      "entity_type": "kpi",
+      "layers": [
+        "strategy"
+      ],
+      "source": {
+        "document_id": "doc-strategy-2025",
+        "document_title": "Стратегия СеверПром 2025–2027",
+        "fragment": "Раздел 2.1: целевые показатели",
+        "page": 7
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "f2",
+      "text": "Риск-аппетит руководства — умеренный; запрещены автономные write-действия без HITL в финансах.",
+      "entity_type": "risk",
+      "layers": [
+        "strategy",
+        "governance"
+      ],
+      "source": {
+        "document_id": "doc-strategy-2025",
+        "document_title": "Стратегия СеверПром 2025–2027",
+        "fragment": "Раздел 4.3: риск-аппетит",
+        "page": 19
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "f3",
+      "text": "Процесс «Заказ → Отгрузка»: 4 decision points, среднее время цикла 3.2 дня.",
+      "entity_type": "process",
+      "layers": [
+        "processes"
+      ],
+      "source": {
+        "document_id": "doc-bpm-sales",
+        "document_title": "Регламент процесса «Заказ → Отгрузка»",
+        "fragment": "§3 Точки решений",
+        "page": null
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "f4",
+      "text": "Узкое место — кредитный контроль: ручное согласование, очередь 6–14 часов.",
+      "entity_type": "process",
+      "layers": [
+        "processes"
+      ],
+      "source": {
+        "document_id": "doc-bpm-sales",
+        "document_title": "Регламент процесса «Заказ → Отгрузка»",
+        "fragment": "§5 Узкие места",
+        "page": null
+      },
+      "confidence": "medium"
+    },
+    {
+      "id": "f5",
+      "text": "8 датасетов содержат ПДн; обработка должна оставаться на территории РФ (152-ФЗ).",
+      "entity_type": "data",
+      "layers": [
+        "data"
+      ],
+      "source": {
+        "document_id": "doc-data-catalog",
+        "document_title": "Каталог корпоративных данных (выдержка)",
+        "fragment": "Лист «ПДн»",
+        "page": null
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "f6",
+      "text": "Качество мастер-данных «Клиенты» — 72%; дубли ~9%.",
+      "entity_type": "data",
+      "layers": [
+        "data"
+      ],
+      "source": {
+        "document_id": "doc-data-catalog",
+        "document_title": "Каталог корпоративных данных (выдержка)",
+        "fragment": "Лист «Качество»",
+        "page": null
+      },
+      "confidence": "medium"
+    },
+    {
+      "id": "f7",
+      "text": "Ключевые системы: 1С:УХ, Bitrix24, WMS; интеграционная шина Kafka.",
+      "entity_type": "system",
+      "layers": [
+        "tools"
+      ],
+      "source": {
+        "document_id": "doc-it-landscape",
+        "document_title": "Карта ИС и интеграций",
+        "fragment": "Слайд 4 — ландшафт",
+        "page": null
+      },
+      "confidence": "high"
+    },
+    {
+      "id": "f8",
+      "text": "Роль CDO назначена; роль владельца ИИ-агентов формально не закреплена.",
+      "entity_type": "role",
+      "layers": [
+        "governance",
+        "strategy"
+      ],
+      "source": {
+        "document_id": "doc-ai-policy-draft",
+        "document_title": "Черновик политики ИИ (не утверждён)",
+        "fragment": "§2 Роли",
+        "page": null
+      },
+      "confidence": "medium"
+    }
+  ],
+  "coverage": [
+    {
+      "layer_id": "strategy",
+      "status": "partial",
+      "score": 0.72,
+      "threshold": 0.55,
+      "document_ids": [
+        "doc-strategy-2025",
+        "doc-ai-policy-draft"
+      ],
+      "blind_zones": [
+        {
+          "id": "bz-s1",
+          "title": "Целевой уровень автономии по функциям",
+          "reason": "Стратегия задаёт риск-аппетит, но не матрицу автономии функций.",
+          "question_ids": [
+            "q1"
+          ]
+        }
+      ],
+      "can_infer": true
+    },
+    {
+      "layer_id": "processes",
+      "status": "partial",
+      "score": 0.64,
+      "threshold": 0.55,
+      "document_ids": [
+        "doc-bpm-sales"
+      ],
+      "blind_zones": [
+        {
+          "id": "bz-p1",
+          "title": "Делегируемость decision points",
+          "reason": "Регламент описывает шаги, но не уровень автономии на каждой точке.",
+          "question_ids": [
+            "q2"
+          ]
+        }
+      ],
+      "can_infer": true
+    },
+    {
+      "layer_id": "data",
+      "status": "partial",
+      "score": 0.58,
+      "threshold": 0.55,
+      "document_ids": [
+        "doc-data-catalog",
+        "doc-it-landscape"
+      ],
+      "blind_zones": [
+        {
+          "id": "bz-d1",
+          "title": "Правовой режим ПДн для ИИ",
+          "reason": "Есть перечень ПДн-датасетов, нет оснований для агентной обработки.",
+          "question_ids": [
+            "q3"
+          ]
+        }
+      ],
+      "can_infer": true
+    },
+    {
+      "layer_id": "tools",
+      "status": "partial",
+      "score": 0.41,
+      "threshold": 0.55,
+      "document_ids": [
+        "doc-it-landscape",
+        "doc-bpm-sales"
+      ],
+      "blind_zones": [
+        {
+          "id": "bz-t1",
+          "title": "Права write для агентов",
+          "reason": "Ландшафт систем есть; матрица tool-прав отсутствует.",
+          "question_ids": [
+            "q5"
+          ]
+        }
+      ],
+      "can_infer": false
+    },
+    {
+      "layer_id": "governance",
+      "status": "missing",
+      "score": 0.28,
+      "threshold": 0.55,
+      "document_ids": [
+        "doc-ai-policy-draft",
+        "doc-strategy-2025"
+      ],
+      "blind_zones": [
+        {
+          "id": "bz-g1",
+          "title": "Распределение ответственности",
+          "reason": "Политика в черновике; роли владельца/оператора не утверждены.",
+          "question_ids": [
+            "q4"
+          ]
+        }
+      ],
+      "can_infer": false
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "layer_id": "strategy",
+      "to_role": "CEO / стратегия",
+      "question": "Какой целевой уровень автономии допустим для кредитного контроля (1–5)?",
+      "why": "Документы фиксируют запрет write без HITL, но не задают целевой уровень по функции.",
+      "status": "open",
+      "answer": null,
+      "answered_at": null
+    },
+    {
+      "id": "q2",
+      "layer_id": "processes",
+      "to_role": "Владелец процесса OTC",
+      "question": "Какие decision points нельзя делегировать агенту даже с HITL?",
+      "why": "Слепая зона: карта точек решений не содержит классификации по делегируемости.",
+      "status": "open",
+      "answer": null,
+      "answered_at": null
+    },
+    {
+      "id": "q3",
+      "layer_id": "data",
+      "to_role": "CDO",
+      "question": "Есть ли согласие/основание на использование ПДн клиентов в RAG для агентов поддержки?",
+      "why": "Каталог отмечает ПДн, но не фиксирует правовой режим для ИИ-обработки.",
+      "status": "open",
+      "answer": null,
+      "answered_at": null
+    },
+    {
+      "id": "q4",
+      "layer_id": "governance",
+      "to_role": "Юрист / комплаенс",
+      "question": "Кто несёт ответственность как владелец, разработчик и оператор пилотного агента?",
+      "why": "До пилота требуется фиксация распределения (ст. 1064 ГК РФ).",
+      "status": "open",
+      "answer": null,
+      "answered_at": null
+    },
+    {
+      "id": "q5",
+      "layer_id": "tools",
+      "to_role": "CIO",
+      "question": "Какие API допускают write-доступ агента в проде на этапе пилота?",
+      "why": "Карта ИС есть, каталог прав агента — нет (слой 4, V2).",
+      "status": "open",
+      "answer": null,
+      "answered_at": null
+    }
+  ],
+  "insights": [
+    {
+      "id": "i1",
+      "layer_id": "strategy",
+      "kind": "finding",
+      "title": "Приоритет эффективности через цифровые каналы",
+      "body": "Стратегия прямо связывает рост EBITDA с операционной эффективностью. Агентные сценарии в OTC и поддержке соответствуют приоритетам.",
+      "sources": [
+        {
+          "document_id": "doc-strategy-2025",
+          "document_title": "Стратегия СеверПром 2025–2027",
+          "fragment": "Раздел 2.1",
+          "page": 7
+        }
+      ],
+      "confidence": "high",
+      "approval": "approved",
+      "owner_role": "Директор по стратегии"
+    },
+    {
+      "id": "i2",
+      "layer_id": "processes",
+      "kind": "finding",
+      "title": "Кредитный контроль — главный кандидат на агентную поддержку",
+      "body": "Очередь 6–14 ч на ручном согласовании. Рекомендуется агент уровня 2–3 (подготовка рекомендации + HITL), не полный автономенный write.",
+      "sources": [
+        {
+          "document_id": "doc-bpm-sales",
+          "document_title": "Регламент процесса «Заказ → Отгрузка»",
+          "fragment": "§5 Узкие места",
+          "page": null
+        }
+      ],
+      "confidence": "high",
+      "approval": "pending",
+      "owner_role": "Владелец процесса OTC"
+    },
+    {
+      "id": "i3",
+      "layer_id": "data",
+      "kind": "proposal",
+      "title": "Перед пилотом поднять качество MDM «Клиенты»",
+      "body": "При качестве 72% и дублях ~9% RAG будет давать ложные рекомендации. Порог допуска к пилоту — качество ≥85%.",
+      "sources": [
+        {
+          "document_id": "doc-data-catalog",
+          "document_title": "Каталог корпоративных данных (выдержка)",
+          "fragment": "Лист «Качество»",
+          "page": null
+        }
+      ],
+      "confidence": "medium",
+      "approval": "hypothesis",
+      "owner_role": "CDO"
+    },
+    {
+      "id": "i4",
+      "layer_id": "strategy",
+      "kind": "proposal",
+      "title": "Целевая модель: агент-рекомендатель + HITL на деньги и договоры",
+      "body": "TO-BE: агенты готовят решения; человек утверждает write по деньгам, договорам, доступам и ПДн. Полная автономия (ур. 5) вне периметра MVP.",
+      "sources": [
+        {
+          "document_id": "doc-strategy-2025",
+          "document_title": "Стратегия СеверПром 2025–2027",
+          "fragment": "Раздел 4.3",
+          "page": 19
+        },
+        {
+          "document_id": "doc-ai-policy-draft",
+          "document_title": "Черновик политики ИИ (не утверждён)",
+          "fragment": "§3 HITL",
+          "page": null
+        }
+      ],
+      "confidence": "medium",
+      "approval": "pending",
+      "owner_role": "CEO"
+    }
+  ],
+  "opportunities": [
+    {
+      "id": "opp-1",
+      "title": "Агент кредитного контроля",
+      "process": "Заказ → Отгрузка / кредитный контроль",
+      "autonomy_level": 3,
+      "impact": "high",
+      "effort": "medium",
+      "regulatory_flags": [
+        "HITL обязателен (деньги)",
+        "ПДн клиентов"
+      ],
+      "admissible": true,
+      "roi_hint": "Сокращение очереди на 60–70%, +0.8 дня к циклу OTC"
+    },
+    {
+      "id": "opp-2",
+      "title": "Агент подготовки коммерческих предложений",
+      "process": "Продажи / КП",
+      "autonomy_level": 2,
+      "impact": "medium",
+      "effort": "low",
+      "regulatory_flags": [
+        "HITL на договоры"
+      ],
+      "admissible": true,
+      "roi_hint": "−30% времени менеджера на подготовку КП"
+    },
+    {
+      "id": "opp-3",
+      "title": "Автономное изменение лимитов в ERP без HITL",
+      "process": "Финансы / лимиты",
+      "autonomy_level": 5,
+      "impact": "high",
+      "effort": "high",
+      "regulatory_flags": [
+        "Блок: деньги без HITL",
+        "Риск-аппетит"
+      ],
+      "admissible": false,
+      "roi_hint": "Отклонён регуляторным фильтром"
+    },
+    {
+      "id": "opp-4",
+      "title": "RAG-ассистент поддержки по базе знаний",
+      "process": "Клиентский сервис",
+      "autonomy_level": 2,
+      "impact": "medium",
+      "effort": "low",
+      "regulatory_flags": [
+        "Локализация ПДн",
+        "Без облачных LLM на ПДн"
+      ],
+      "admissible": true,
+      "roi_hint": "−25% времени 1-й линии"
+    }
+  ],
+  "roadmap": [
+    {
+      "id": "ph-0",
+      "name": "Фундамент данных и прав",
+      "horizon": "0–3 мес",
+      "items": [
+        "Поднять качество MDM «Клиенты» до ≥85%",
+        "Зафиксировать роли владельца/оператора агента",
+        "Утвердить HITL-матрицу по деньгам/договорам/ПДн"
+      ],
+      "investment_mln": 4.5
+    },
+    {
+      "id": "ph-1",
+      "name": "Пилот OTC",
+      "horizon": "3–6 мес",
+      "items": [
+        "Пилот агента кредитного контроля (ур. 3 + HITL)",
+        "Агент подготовки КП (ур. 2)",
+        "Замер cycle time и точности рекомендаций"
+      ],
+      "investment_mln": 9.0
+    },
+    {
+      "id": "ph-2",
+      "name": "Масштаб и надзор",
+      "horizon": "6–12 мес",
+      "items": [
+        "Расширение на сервис (RAG, on-prem)",
+        "Agent Passport и аудит действий",
+        "Фактический ROI vs прогноз"
+      ],
+      "investment_mln": 14.0
+    }
+  ],
+  "roi": {
+    "investment_mln": 27.5,
+    "annual_benefit_mln": 41.0,
+    "payback_months": 10,
+    "tco_3y_mln": 48.0,
+    "kpis": [
+      {
+        "name": "Цикл OTC",
+        "as_is": "3.2 дня",
+        "to_be": "2.2 дня"
+      },
+      {
+        "name": "Очередь кредитного контроля",
+        "as_is": "6–14 ч",
+        "to_be": "≤2 ч"
+      },
+      {
+        "name": "Качество MDM «Клиенты»",
+        "as_is": "72%",
+        "to_be": "≥90%"
+      },
+      {
+        "name": "Доля HITL на write-деньги",
+        "as_is": "н/д",
+        "to_be": "100%"
+      }
+    ],
+    "assumptions": [
+      "Пилот охватывает 40% заказов OTC",
+      "Качество данных достигает порога до старта пилота",
+      "Модели ИИ — on-prem / доверенный контур (без передачи ПДн в облако)",
+      "Утверждение выводов владельцами разделов сохраняется"
+    ]
+  },
+  "regulatory": [
+    {
+      "id": "reg-152",
+      "title": "Локализация ПДн",
+      "basis": "152-ФЗ (ужесточение с 01.07.2025)",
+      "status": "warn",
+      "detail": "В каталоге 8 ПДн-датасетов. Нужна гарантия сбора/обработки на территории РФ."
+    },
+    {
+      "id": "reg-243",
+      "title": "Категория модели ИИ",
+      "basis": "243-ФЗ",
+      "status": "warn",
+      "detail": "Для пилота зафиксировать использование суверенной/национальной модели или on-prem."
+    },
+    {
+      "id": "reg-cloud",
+      "title": "Запрет облачных ИИ на чувствительные данные",
+      "basis": "Требования по чувствительным данным / ФСТЭК с 01.03.2026",
+      "status": "pass",
+      "detail": "В дорожной карте заложен on-prem контур; облачные LLM на ПДн не планируются."
+    },
+    {
+      "id": "reg-hitl",
+      "title": "Human-in-the-loop",
+      "basis": "Внутренняя политика + лучшие практики",
+      "status": "pass",
+      "detail": "Кейсы с деньгами/договорами/ПДн требуют HITL; автономный write-лимит отклонён."
+    },
+    {
+      "id": "reg-resp",
+      "title": "Распределение ответственности",
+      "basis": "ст. 1064 ГК РФ",
+      "status": "block",
+      "detail": "До пилота не зафиксированы владелец, разработчик и оператор агента."
+    },
+    {
+      "id": "reg-kii",
+      "title": "Реестр российского ПО (КИИ/ГИС)",
+      "basis": "С 01.03.2026 для КИИ/ГИС",
+      "status": "warn",
+      "detail": "Профиль «обычный бизнес» — мониторинг. При статусе КИИ/ГИС — обязательный фильтр ПО."
+    }
+  ],
+  "model_nodes": [
+    {
+      "id": "org-ceo",
+      "type": "org",
+      "label": "CEO / Стратегия",
+      "meta": "Риск-аппетит: умеренный",
+      "linked_ids": [
+        "kpi-ebitda",
+        "proc-otc"
+      ]
+    },
+    {
+      "id": "org-cdo",
+      "type": "org",
+      "label": "CDO",
+      "meta": "Владелец данных",
+      "linked_ids": [
+        "data-clients",
+        "sys-mdm"
+      ]
+    },
+    {
+      "id": "proc-otc",
+      "type": "process",
+      "label": "Заказ → Отгрузка",
+      "meta": "Цикл 3.2 дня",
+      "linked_ids": [
+        "agent-credit",
+        "sys-1c",
+        "kpi-otc"
+      ]
+    },
+    {
+      "id": "sys-1c",
+      "type": "system",
+      "label": "1С:УХ",
+      "meta": "ERP",
+      "linked_ids": [
+        "proc-otc",
+        "data-clients"
+      ]
+    },
+    {
+      "id": "sys-mdm",
+      "type": "system",
+      "label": "MDM (пилот)",
+      "meta": "Качество клиентов 72%",
+      "linked_ids": [
+        "data-clients"
+      ]
+    },
+    {
+      "id": "data-clients",
+      "type": "data",
+      "label": "Мастер-данные «Клиенты»",
+      "meta": "ПДн, качество 72%",
+      "linked_ids": [
+        "agent-credit",
+        "agent-rag"
+      ]
+    },
+    {
+      "id": "agent-credit",
+      "type": "agent",
+      "label": "Агент кредитного контроля",
+      "meta": "Ур. автономии 3 · HITL",
+      "linked_ids": [
+        "proc-otc",
+        "data-clients",
+        "sys-1c"
+      ]
+    },
+    {
+      "id": "agent-rag",
+      "type": "agent",
+      "label": "RAG-ассистент поддержки",
+      "meta": "Ур. автономии 2 · on-prem",
+      "linked_ids": [
+        "data-clients"
+      ]
+    },
+    {
+      "id": "kpi-ebitda",
+      "type": "kpi",
+      "label": "EBITDA +12% к 2027",
+      "meta": null,
+      "linked_ids": [
+        "org-ceo"
+      ]
+    },
+    {
+      "id": "kpi-otc",
+      "type": "kpi",
+      "label": "Цикл OTC → 2.2 дня",
+      "meta": null,
+      "linked_ids": [
+        "proc-otc",
+        "agent-credit"
+      ]
+    }
+  ],
+  "engine_metrics": {
+    "extraction_accuracy": 0.86,
+    "hallucination_rate": 0.04,
+    "coverage_completeness": 0.526
+  }
+}

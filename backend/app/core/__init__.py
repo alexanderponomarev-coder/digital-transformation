@@ -1,0 +1,1 @@
+"""Core methodology and configuration."""

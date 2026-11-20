@@ -1,4 +1,4 @@
-import type { ClassifyResult, Opportunity, PlatformSnapshot } from '../types'
+import type { ClassifyResult, Opportunity, PlatformSnapshot, RoiModel } from '../types'
 
 const BASE = '/api'
 
@@ -88,5 +88,10 @@ export const api = {
     }),
   asIs: () => request<Record<string, unknown>>('/model/as-is'),
   toBe: () => request<Record<string, unknown>>('/model/to-be'),
+  computeRoi: (body: Record<string, unknown>) =>
+    request<RoiModel>('/roi/compute', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
   reset: () => request<PlatformSnapshot>('/reset', { method: 'POST' }),
 }

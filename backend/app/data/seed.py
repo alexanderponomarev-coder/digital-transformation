@@ -474,6 +474,8 @@ def build_snapshot() -> PlatformSnapshot:
             regulatory_flags=["HITL обязателен (деньги)", "ПДн клиентов"],
             admissible=True,
             roi_hint="Сокращение очереди на 60–70%, +0.8 дня к циклу OTC",
+            process_step_id="otc.credit_control",
+            hours_per_year=4800,
         ),
         Opportunity(
             id="opp-2",
@@ -485,6 +487,8 @@ def build_snapshot() -> PlatformSnapshot:
             regulatory_flags=["HITL на договоры"],
             admissible=True,
             roi_hint="−30% времени менеджера на подготовку КП",
+            process_step_id="sales.quote",
+            hours_per_year=1800,
         ),
         Opportunity(
             id="opp-3",
@@ -496,6 +500,8 @@ def build_snapshot() -> PlatformSnapshot:
             regulatory_flags=["Блок: деньги без HITL", "Риск-аппетит"],
             admissible=False,
             roi_hint="Отклонён регуляторным фильтром",
+            process_step_id="finance.limits",
+            hours_per_year=0,
         ),
         Opportunity(
             id="opp-4",
@@ -507,6 +513,8 @@ def build_snapshot() -> PlatformSnapshot:
             regulatory_flags=["Локализация ПДн", "Без облачных LLM на ПДн"],
             admissible=True,
             roi_hint="−25% времени 1-й линии",
+            process_step_id="service.l1",
+            hours_per_year=2200,
         ),
     ]
 
@@ -571,6 +579,19 @@ def build_snapshot() -> PlatformSnapshot:
             "Модели ИИ — on-prem / доверенный контур (без передачи ПДн в облако)",
             "Утверждение выводов владельцами разделов сохраняется",
         ],
+        kind="illustrative",
+        monetary_roi=None,
+        hours_saved_per_year=8800,
+        benefit_lines=[],
+        overlapping_steps=[],
+        missing_inputs=[
+            "подтверждённая ставка часа",
+            "независимый пересчёт выгод по линиям",
+        ],
+        disclaimer=(
+            "Иллюстрация seed «СеверПром», не доказательный ROI. "
+            "Для расчёта: POST /api/roi/compute. Денежный ROI публикуется только при kind=calculated."
+        ),
     )
 
     regulatory = [

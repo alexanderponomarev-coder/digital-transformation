@@ -136,6 +136,9 @@ class Opportunity(BaseModel):
     regulatory_flags: list[str] = Field(default_factory=list)
     admissible: bool = True
     roi_hint: str = ""
+    # P2: structured effect for ROI engine / anti-double-count
+    process_step_id: str | None = None
+    hours_per_year: float | None = None
 
 
 class RoadmapPhase(BaseModel):
@@ -152,6 +155,26 @@ class KpiDelta(BaseModel):
     to_be: str
 
 
+class RoiBenefitLine(BaseModel):
+    id: str
+    description: str
+    process_step_id: str
+    opportunity_id: str | None = None
+    hours_per_year: float | None = None
+    hourly_rate: float | None = None  # same currency as investment
+    cash_benefit: float | None = None  # direct money, optional
+    included: bool = True
+    excluded_reason: str | None = None
+
+
+class RoiComputeRequest(BaseModel):
+    investment: float | None = None
+    currency: str = "RUB"
+    horizon_months: int = 12
+    benefits: list[RoiBenefitLine] = Field(default_factory=list)
+    allow_overlap: bool = False
+
+
 class RoiModel(BaseModel):
     investment_mln: float
     annual_benefit_mln: float
@@ -159,6 +182,19 @@ class RoiModel(BaseModel):
     tco_3y_mln: float
     kpis: list[KpiDelta]
     assumptions: list[str]
+    # P2 / audit ROI rule
+    kind: Literal["illustrative", "calculated", "hours_only", "insufficient_inputs"] = (
+        "illustrative"
+    )
+    formula: str = "ROI = (подтверждённые денежные выгоды − совокупные затраты) / совокупные затраты"
+    currency: str = "RUB"
+    horizon_months: int = 12
+    monetary_roi: float | None = None  # None → do not publish as proven ROI
+    hours_saved_per_year: float | None = None
+    benefit_lines: list[RoiBenefitLine] = Field(default_factory=list)
+    overlapping_steps: list[str] = Field(default_factory=list)
+    missing_inputs: list[str] = Field(default_factory=list)
+    disclaimer: str = ""
 
 
 class RegulatoryCheck(BaseModel):

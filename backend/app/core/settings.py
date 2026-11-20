@@ -12,10 +12,18 @@ class Settings(BaseSettings):
     )
     host: str = "0.0.0.0"
     port: int = 8000
+    # If non-empty, all /api/* except /api/health require Authorization: Bearer …
+    api_token: str = ""
+    # Shared/prod stand: forbid destructive reset even with a valid token
+    disable_reset: bool = False
 
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
+    def auth_enabled(self) -> bool:
+        return bool(self.api_token.strip())
 
 
 settings = Settings()

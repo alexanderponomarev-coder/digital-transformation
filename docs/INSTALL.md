@@ -487,6 +487,7 @@ curl -fsS http://127.0.0.1/api/health
 - [ ] `/etc/stratum/stratum.env`: `STRATUM_SERVER_NAME` и порты верные  
 - [ ] `stratum-auto-update.timer` active (и webhook, если нужен)  
 - [ ] Private: `STRATUM_GITHUB_TOKEN` (или deploy key) + `auto-update.sh --force` OK  
+- [ ] Shared-стенд: `STRATUM_API_TOKEN` + `STRATUM_DISABLE_RESET=1` (см. [SECURITY.md](SECURITY.md))  
 - [ ] (Опционально) TLS / firewall / webhook в GitHub  
 
 Связанные документы: [DEPLOY_DEBIAN.md](DEPLOY_DEBIAN.md), [COHOST_KLARIS.md](COHOST_KLARIS.md), [CONCEPT.md](CONCEPT.md).

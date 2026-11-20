@@ -49,6 +49,8 @@ export const api = {
     summary?: string
     content_hint?: string
     acl_readers?: string[]
+    read_error?: boolean
+    read_error_detail?: string
   }) =>
     request<ClassifyResult>('/documents/upload', {
       method: 'POST',
@@ -61,6 +63,11 @@ export const api = {
     request<PlatformSnapshot>(`/documents/${id}/acl`, {
       method: 'PATCH',
       body: JSON.stringify(body),
+    }),
+  confirmDocumentVersion: (id: string, note = '') =>
+    request<PlatformSnapshot>(`/documents/${id}/confirm-version`, {
+      method: 'POST',
+      body: JSON.stringify({ note }),
     }),
   getDocument: (id: string) =>
     request<{ document: unknown; facts: unknown[] }>(`/documents/${id}`),

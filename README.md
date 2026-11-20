@@ -56,6 +56,7 @@ curl -fsS -H 'Host: stratum.example.com' http://127.0.0.1/api/health
 - [Деплой Debian (справка)](docs/DEPLOY_DEBIAN.md)
 - [Cohost с Klaris](docs/COHOST_KLARIS.md)
 - [Доступ API / ACL (P0)](docs/SECURITY.md)
+- [Норматив / версии / partial read (P1)](docs/P1_EVIDENCE.md)
 
 ## MVP-модули
 

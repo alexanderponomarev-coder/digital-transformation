@@ -13,7 +13,7 @@
     "open_questions_count": 5,
     "approved_insights_count": 1,
     "blocked_cases_count": 2,
-    "overall_coverage": 0.53
+    "overall_coverage": 0.54
   },
   "layers": [
     {
@@ -118,7 +118,12 @@
       "freshness_days": 16,
       "size_label": "2.4 МБ",
       "summary": "Цели роста EBITDA, приоритет цифровых каналов, риск-аппетит «умеренный».",
-      "status": "ready"
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
     },
     {
       "id": "doc-bpm-sales",
@@ -134,7 +139,32 @@
       "freshness_days": 31,
       "size_label": "890 КБ",
       "summary": "12 шагов, 4 точки согласования, SLA 48 ч, узкое место — кредитный контроль.",
-      "status": "ready"
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-otc-journal",
+      "title": "Выгрузка журнала OTC (синтетика)",
+      "format": "xlsx",
+      "uploaded_at": "2025-10-01",
+      "version": 1,
+      "replaces_id": null,
+      "layers": [
+        "processes"
+      ],
+      "freshness_days": 48,
+      "size_label": "640 КБ",
+      "summary": "Синтетическая выборка кейсов кредитного контроля за 2025-Q3.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
     },
     {
       "id": "doc-data-catalog",
@@ -149,7 +179,12 @@
       "freshness_days": 74,
       "size_label": "1.1 МБ",
       "summary": "42 датасета; 8 с ПДн; качество «клиенты» — 72%; MDM в пилоте.",
-      "status": "ready"
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
     },
     {
       "id": "doc-it-landscape",
@@ -165,7 +200,12 @@
       "freshness_days": 90,
       "size_label": "3.6 МБ",
       "summary": "ERP 1С:УХ, CRM Bitrix24, WMS, шина Kafka; 37 API без единого каталога SLA.",
-      "status": "ready"
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
     },
     {
       "id": "doc-ai-policy-draft",
@@ -181,7 +221,12 @@
       "freshness_days": 8,
       "size_label": "410 КБ",
       "summary": "HITL для финансов заявлен; распределение ответственности не зафиксировано.",
-      "status": "ready"
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
     }
   ],
   "facts": [
@@ -198,7 +243,12 @@
         "fragment": "Раздел 2.1: целевые показатели",
         "page": 7
       },
-      "confidence": "high"
+      "confidence": "high",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
     },
     {
       "id": "f2",
@@ -214,11 +264,16 @@
         "fragment": "Раздел 4.3: риск-аппетит",
         "page": 19
       },
-      "confidence": "high"
+      "confidence": "high",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
     },
     {
       "id": "f3",
-      "text": "Процесс «Заказ → Отгрузка»: 4 decision points, среднее время цикла 3.2 дня.",
+      "text": "Процесс «Заказ → Отгрузка»: 4 decision points; норматив SLA 48 ч.",
       "entity_type": "process",
       "layers": [
         "processes"
@@ -226,14 +281,19 @@
       "source": {
         "document_id": "doc-bpm-sales",
         "document_title": "Регламент процесса «Заказ → Отгрузка»",
-        "fragment": "§3 Точки решений",
+        "fragment": "§3 Точки решений / SLA",
         "page": null
       },
-      "confidence": "high"
+      "confidence": "high",
+      "evidence_kind": "norm",
+      "period": null,
+      "sample_size": null,
+      "metric_value": "48",
+      "metric_unit": "час"
     },
     {
       "id": "f4",
-      "text": "Узкое место — кредитный контроль: ручное согласование, очередь 6–14 часов.",
+      "text": "По регламенту узкое место — кредитный контроль: ручное согласование (заявлена очередь 6–14 ч).",
       "entity_type": "process",
       "layers": [
         "processes"
@@ -244,7 +304,52 @@
         "fragment": "§5 Узкие места",
         "page": null
       },
-      "confidence": "medium"
+      "confidence": "medium",
+      "evidence_kind": "norm",
+      "period": null,
+      "sample_size": null,
+      "metric_value": "6–14",
+      "metric_unit": "час"
+    },
+    {
+      "id": "f3o",
+      "text": "Наблюдаемый цикл OTC (медиана): 4.1 дня.",
+      "entity_type": "process",
+      "layers": [
+        "processes"
+      ],
+      "source": {
+        "document_id": "doc-otc-journal",
+        "document_title": "Выгрузка журнала OTC (синтетика)",
+        "fragment": "Агрегат cycle_time_days",
+        "page": null
+      },
+      "confidence": "high",
+      "evidence_kind": "observed",
+      "period": "2025-07-01…2025-09-30",
+      "sample_size": 120,
+      "metric_value": "4.1",
+      "metric_unit": "день"
+    },
+    {
+      "id": "f4o",
+      "text": "Наблюдаемая очередь кредитного контроля (p50): 9 ч; p90: 16 ч.",
+      "entity_type": "process",
+      "layers": [
+        "processes"
+      ],
+      "source": {
+        "document_id": "doc-otc-journal",
+        "document_title": "Выгрузка журнала OTC (синтетика)",
+        "fragment": "Агрегат credit_queue_hours",
+        "page": null
+      },
+      "confidence": "high",
+      "evidence_kind": "observed",
+      "period": "2025-07-01…2025-09-30",
+      "sample_size": 120,
+      "metric_value": "9",
+      "metric_unit": "час"
     },
     {
       "id": "f5",
@@ -259,7 +364,12 @@
         "fragment": "Лист «ПДн»",
         "page": null
       },
-      "confidence": "high"
+      "confidence": "high",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
     },
     {
       "id": "f6",
@@ -274,7 +384,12 @@
         "fragment": "Лист «Качество»",
         "page": null
       },
-      "confidence": "medium"
+      "confidence": "medium",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
     },
     {
       "id": "f7",
@@ -289,7 +404,12 @@
         "fragment": "Слайд 4 — ландшафт",
         "page": null
       },
-      "confidence": "high"
+      "confidence": "high",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
     },
     {
       "id": "f8",
@@ -305,7 +425,12 @@
         "fragment": "§2 Роли",
         "page": null
       },
-      "confidence": "medium"
+      "confidence": "medium",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
     }
   ],
   "coverage": [
@@ -333,10 +458,11 @@
     {
       "layer_id": "processes",
       "status": "partial",
-      "score": 0.64,
+      "score": 0.72,
       "threshold": 0.55,
       "document_ids": [
-        "doc-bpm-sales"
+        "doc-bpm-sales",
+        "doc-otc-journal"
       ],
       "blind_zones": [
         {
@@ -646,12 +772,12 @@
     "kpis": [
       {
         "name": "Цикл OTC",
-        "as_is": "3.2 дня",
+        "as_is": "норматив SLA 48 ч / наблюдение 4.1 дня (n=120, 2025-Q3)",
         "to_be": "2.2 дня"
       },
       {
         "name": "Очередь кредитного контроля",
-        "as_is": "6–14 ч",
+        "as_is": "норматив 6–14 ч (регламент) / наблюдение p50=9 ч",
         "to_be": "≤2 ч"
       },
       {
@@ -820,6 +946,6 @@
   "engine_metrics": {
     "extraction_accuracy": 0.86,
     "hallucination_rate": 0.04,
-    "coverage_completeness": 0.526
+    "coverage_completeness": 0.542
   }
 }

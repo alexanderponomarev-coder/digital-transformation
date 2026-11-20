@@ -80,8 +80,15 @@ log "готово: $(git rev-parse --short HEAD)"
 
 # health check (не валим timer при кратковременном рестарте)
 sleep 2
-if curl -fsS http://127.0.0.1/api/health >/dev/null 2>&1 \
-  || curl -fsS http://127.0.0.1:8080/api/health >/dev/null 2>&1; then
+# shellcheck disable=SC1090
+[[ -f /etc/stratum/stratum.env ]] && set -a && source /etc/stratum/stratum.env && set +a || true
+HOST_HDR=()
+if [[ -n "${STRATUM_SERVER_NAME:-}" && "${STRATUM_SERVER_NAME}" != "_" ]]; then
+  HOST_HDR=(-H "Host: ${STRATUM_SERVER_NAME}")
+fi
+if curl -fsS "${HOST_HDR[@]}" http://127.0.0.1/api/health >/dev/null 2>&1 \
+  || curl -fsS http://127.0.0.1:8000/api/health >/dev/null 2>&1 \
+  || curl -fsS http://127.0.0.1:8001/api/health >/dev/null 2>&1; then
   log "health ok"
 else
   log "WARN: health check не прошёл сразу после обновления"

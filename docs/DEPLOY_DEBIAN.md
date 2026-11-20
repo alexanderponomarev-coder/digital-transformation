@@ -97,17 +97,17 @@ STRATUM_WEBHOOK_SECRET=...
 git -C /opt/stratum-src remote set-url origin https://<TOKEN>@github.com/ORG/REPO.git
 ```
 
-Другой порт (например 8080):
+Домен (вместо catch-all `_`):
 
 ```bash
-sudo STRATUM_HTTP_PORT=8080 bash deploy/debian/install.sh
+sudo STRATUM_SERVER_NAME=stratum.example.com bash deploy/debian/install.sh
 ```
 
 Если на хосте **нет systemd** (редко на VPS, бывает в контейнерах):
 
 ```bash
 sudo bash deploy/debian/install.sh
-sudo bash deploy/debian/run-native.sh 8080
+sudo bash deploy/debian/run-native.sh
 ```
 
 Логи:
@@ -163,8 +163,8 @@ sudo certbot --nginx -d stratum.example.com
 ```bash
 make test
 ./scripts/smoke-deploy.sh http://YOUR_VPS_IP
-# native на нестандартном порту:
-./scripts/smoke-deploy.sh http://YOUR_VPS_IP:8080
+# cohost по домену:
+./scripts/smoke-deploy.sh http://stratum.example.com
 ```
 
 ---
@@ -174,8 +174,8 @@ make test
 См. [`docs/COHOST_KLARIS.md`](COHOST_KLARIS.md).
 
 ```bash
-# Klaris занимает :80 / :8000 — STRATUM автоматически или явно:
-sudo STRATUM_HTTP_PORT=8080 STRATUM_API_PORT=8001 bash deploy/debian/install.sh
+# оба на :80, разные server_name; API STRATUM → :8001
+sudo STRATUM_SERVER_NAME=stratum.example.com bash deploy/debian/install.sh
 ```
 
 ## Регуляторика / хостинг РФ

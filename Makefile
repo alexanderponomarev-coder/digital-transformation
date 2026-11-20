@@ -24,7 +24,7 @@ native-install:
 	sudo bash deploy/debian/install.sh "$(CURDIR)"
 
 native-run:
-	sudo bash deploy/debian/run-native.sh 8080
+	sudo bash deploy/debian/run-native.sh
 
 enable-auto-update:
 	sudo bash deploy/debian/enable-auto-update.sh

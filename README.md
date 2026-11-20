@@ -39,11 +39,11 @@ sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh --webhook
 curl -fsS http://127.0.0.1/api/health
 ```
 
-Кратко (рядом с Klaris):
+Кратко (рядом с Klaris — по домену, оба на `:80`):
 
 ```bash
-sudo STRATUM_HTTP_PORT=8080 STRATUM_API_PORT=8001 bash deploy/debian/install.sh /opt/stratum-src
-curl -fsS http://127.0.0.1:8080/api/health
+sudo STRATUM_SERVER_NAME=stratum.example.com bash deploy/debian/install.sh /opt/stratum-src
+curl -fsS -H 'Host: stratum.example.com' http://127.0.0.1/api/health
 ```
 
 ## Документация

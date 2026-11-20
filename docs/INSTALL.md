@@ -203,14 +203,20 @@ sudo bash /opt/klaris/deploy/debian/enable-auto-update.sh --webhook
 
 ### 2.2. Установка STRATUM рядом
 
-`install.sh` при наличии Klaris **требует** `STRATUM_SERVER_NAME` и ставит API на `:8001`, HTTP на `:80`.
+`install.sh` при наличии Klaris **требует** `STRATUM_SERVER_NAME` (из env-файла или из команды) и ставит API на `:8001`, HTTP на `:80`.
 
 ```bash
 sudo git clone https://github.com/alexanderponomarev-coder/digital-transformation-.git /opt/stratum-src
 cd /opt/stratum-src
 sudo git checkout main
 
+# вариант 1 — в команде:
 sudo STRATUM_SERVER_NAME=stratum.example.com bash deploy/debian/install.sh /opt/stratum-src
+
+# вариант 2 — заранее в /etc/stratum/stratum.env:
+#   STRATUM_SERVER_NAME=stratum.example.com
+# затем:
+# sudo bash deploy/debian/install.sh /opt/stratum-src
 ```
 
 Проверка STRATUM:

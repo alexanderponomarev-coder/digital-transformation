@@ -1,0 +1,25 @@
+[Unit]
+Description=STRATUM FastAPI backend (native, no Docker)
+Documentation=file:///opt/stratum/docs/DEPLOY_DEBIAN.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=stratum
+Group=stratum
+WorkingDirectory=/opt/stratum/backend
+EnvironmentFile=-/etc/stratum/stratum.env
+Environment=PATH=/opt/stratum/.venv/bin:/usr/bin
+ExecStart=/opt/stratum/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 2
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/stratum
+
+[Install]
+WantedBy=multi-user.target

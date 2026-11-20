@@ -25,7 +25,11 @@ npm-debug.log*
 .env.*
 !.env.example
 
+# Local deploy artifacts
+/opt/
+
 # Build
 dist/
 build/
 coverage/
+.env

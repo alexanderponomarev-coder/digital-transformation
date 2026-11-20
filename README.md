@@ -8,21 +8,16 @@
 
 - **Backend:** Python 3.12, FastAPI
 - **Frontend:** React 19, Vite, TypeScript, Tailwind CSS
+- **Публикация:** Debian VPS — **native (systemd + nginx, без Docker)** или Docker Compose
 - **Тесты:** pytest (API + engine)
 
-## Быстрый старт
+## Быстрый старт (dev)
 
 ```bash
-# Backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r backend/requirements.txt
-cd backend && uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-
-# Frontend (другой терминал)
-cd frontend
-npm install
-npm run dev
+make install
+make api    # :8000
+make web    # :5173
+make test
 ```
 
 - UI: http://127.0.0.1:5173  
@@ -30,17 +25,30 @@ npm run dev
 
 Демо-проект: холдинг **СеверПром**.
 
-## Тесты
+## Публикация на Debian VPS
+
+Подробно: [docs/DEPLOY_DEBIAN.md](docs/DEPLOY_DEBIAN.md)
 
 ```bash
-source .venv/bin/activate
-cd backend && pytest -q
+# Без Docker (systemd + nginx) — основной вариант
+sudo bash deploy/debian/install.sh
+
+# С Docker
+sudo bash deploy/debian/install-docker.sh
+```
+
+После деплоя:
+
+```bash
+curl -fsS http://YOUR_VPS_IP/api/health
+./scripts/smoke-deploy.sh http://YOUR_VPS_IP
 ```
 
 ## Документация
 
 - [Концепция v1.1](docs/CONCEPT.md)
 - [ТЗ v1.0](docs/TZ.md)
+- [Деплой Debian](docs/DEPLOY_DEBIAN.md)
 
 ## MVP-модули
 

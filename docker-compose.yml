@@ -1,0 +1,35 @@
+services:
+  api:
+    build:
+      context: ./backend
+    image: stratum-api:latest
+    restart: unless-stopped
+    environment:
+      STRATUM_CORS_ORIGINS: ${STRATUM_CORS_ORIGINS:-*}
+    expose:
+      - "8000"
+    networks:
+      - stratum
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  web:
+    build:
+      context: ./frontend
+    image: stratum-web:latest
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${STRATUM_HTTP_PORT:-80}:80"
+    networks:
+      - stratum
+
+networks:
+  stratum:
+    driver: bridge

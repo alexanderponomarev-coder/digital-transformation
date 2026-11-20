@@ -71,6 +71,11 @@ export function WorkspaceShell() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-tide-600">
               {snapshot?.overview.version ?? 'MVP'}
+              {snapshot?.overview.deploy_mode ? (
+                <span className="ml-2 tracking-normal text-ink-400">
+                  · {snapshot.overview.deploy_mode === 'demo' ? 'demo-стенд' : 'lab'}
+                </span>
+              ) : null}
             </p>
             <h1 className="font-display text-xl font-bold text-ink-900">
               {snapshot?.overview.project_name ?? 'Загрузка…'}
@@ -81,6 +86,15 @@ export function WorkspaceShell() {
             <div className="text-xs">{snapshot?.overview.industry}</div>
           </div>
         </header>
+
+        {snapshot?.overview.storage_disclaimer ? (
+          <div
+            role="note"
+            className="border-b border-amber-200/80 bg-amber-50/90 px-5 py-2 text-xs leading-relaxed text-ink-700"
+          >
+            {snapshot.overview.storage_disclaimer}
+          </div>
+        ) : null}
 
         <main className="px-5 py-6">
           {loading && !snapshot && (

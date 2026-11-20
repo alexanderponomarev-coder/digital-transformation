@@ -157,12 +157,14 @@ cd /opt/stratum && sudo docker compose up -d --build
 
 ## TLS
 
-После DNS:
+После DNS и рабочего HTTP:
 
 ```bash
-sudo apt-get install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d stratum.example.com
+sudo bash /opt/stratum/deploy/debian/enable-tls.sh stratum.example.com --email ops@example.com
+# или: certbot --nginx -d stratum.example.com
 ```
+
+Lab vs demo и runbook `1-web.ru`: [P4_STAND.md](P4_STAND.md).
 
 ---
 

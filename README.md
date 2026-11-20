@@ -59,6 +59,7 @@ curl -fsS -H 'Host: stratum.example.com' http://127.0.0.1/api/health
 - [Норматив / версии / partial read (P1)](docs/P1_EVIDENCE.md)
 - [ROI engine (P2)](docs/P2_ROI.md)
 - [Сравнение альтернатив / audit log (P3)](docs/P3_COMPARE_AUDIT.md)
+- [Стенд: lab vs demo + TLS (P4)](docs/P4_STAND.md)
 
 ## MVP-модули
 

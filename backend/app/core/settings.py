@@ -1,6 +1,16 @@
 from __future__ import annotations
 
+from typing import Literal
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DeployMode = Literal["lab", "demo"]
+
+STORAGE_DISCLAIMER = (
+    "Данные только в RAM процесса API: перезапуск или reset уничтожает изменения. "
+    "Персистентного хранилища и бэкапа нет."
+)
 
 
 class Settings(BaseSettings):
@@ -16,6 +26,15 @@ class Settings(BaseSettings):
     api_token: str = ""
     # Shared/prod stand: forbid destructive reset even with a valid token
     disable_reset: bool = False
+    # lab = open product lab; demo = shared stand (token + no reset recommended)
+    deploy_mode: DeployMode = "lab"
+
+    @field_validator("deploy_mode", mode="before")
+    @classmethod
+    def _normalize_mode(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip().lower()
+        return value
 
     @property
     def cors_origin_list(self) -> list[str]:

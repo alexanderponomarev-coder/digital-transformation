@@ -38,6 +38,10 @@ export function LandingPage() {
             методологии, показывает слепые зоны и задаёт точечные вопросы —
             а не выдумывает факты.
           </p>
+          <p className="mt-3 max-w-lg text-sm leading-relaxed text-ink-400">
+            Seed «СеверПром» — демонстрационный корпус. Состояние сессии
+            хранится только в памяти API (без БД и бэкапа).
+          </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               to="/app"

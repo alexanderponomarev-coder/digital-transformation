@@ -1,0 +1,28 @@
+[Unit]
+Description=STRATUM FastAPI backend (native, no Docker)
+Documentation=file:///opt/stratum/docs/DEPLOY_DEBIAN.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=stratum
+Group=stratum
+WorkingDirectory=/opt/stratum/backend
+EnvironmentFile=-/etc/stratum/stratum.env
+Environment=PATH=/opt/stratum/.venv/bin:/usr/bin
+Environment=APP_ROOT=/opt/stratum
+Environment=ENV_FILE=/etc/stratum/stratum.env
+# Default 8000; cohost with Klaris → STRATUM_API_PORT=8001 in stratum.env
+ExecStart=/opt/stratum/deploy/debian/run-api.sh
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/stratum
+
+[Install]
+WantedBy=multi-user.target

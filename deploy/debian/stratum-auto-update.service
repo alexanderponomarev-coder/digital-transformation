@@ -1,0 +1,17 @@
+[Unit]
+Description=STRATUM auto-update from GitHub
+Documentation=file:///opt/stratum/docs/DEPLOY_DEBIAN.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+Nice=10
+ExecStart=/opt/stratum/deploy/debian/auto-update.sh
+EnvironmentFile=-/etc/stratum/stratum.env
+# достаточно прав для git + update (root)
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

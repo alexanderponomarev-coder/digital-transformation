@@ -8,21 +8,16 @@
 
 - **Backend:** Python 3.12, FastAPI
 - **Frontend:** React 19, Vite, TypeScript, Tailwind CSS
+- **Публикация:** Debian VPS — **native (systemd + nginx, без Docker)** или Docker Compose
 - **Тесты:** pytest (API + engine)
 
-## Быстрый старт
+## Быстрый старт (dev)
 
 ```bash
-# Backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r backend/requirements.txt
-cd backend && uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-
-# Frontend (другой терминал)
-cd frontend
-npm install
-npm run dev
+make install
+make api    # :8000
+make web    # :5173
+make test
 ```
 
 - UI: http://127.0.0.1:5173  
@@ -30,17 +25,43 @@ npm run dev
 
 Демо-проект: холдинг **СеверПром**.
 
-## Тесты
+## Публикация на Debian VPS
+
+Подробно: [docs/DEPLOY_DEBIAN.md](docs/DEPLOY_DEBIAN.md)
 
 ```bash
-source .venv/bin/activate
-cd backend && pytest -q
+# Без Docker (systemd + nginx) — основной вариант
+git clone <repo-url> /opt/stratum-src
+cd /opt/stratum-src
+sudo bash deploy/debian/install.sh
+
+# Автообновление с GitHub (timer каждые ~5 мин)
+sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh
+# + webhook на push:
+sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh --webhook
+
+# С Docker
+sudo bash deploy/debian/install-docker.sh
+
+# Один VPS с Klaris (2fromlarec): Klaris :80, STRATUM :8080
+sudo STRATUM_HTTP_PORT=8080 STRATUM_API_PORT=8001 bash deploy/debian/install.sh
+```
+
+После деплоя:
+
+```bash
+curl -fsS http://YOUR_VPS_IP/api/health
+# или при cohost:
+curl -fsS http://YOUR_VPS_IP:8080/api/health
+./scripts/smoke-deploy.sh http://YOUR_VPS_IP:8080
 ```
 
 ## Документация
 
 - [Концепция v1.1](docs/CONCEPT.md)
 - [ТЗ v1.0](docs/TZ.md)
+- [Деплой Debian](docs/DEPLOY_DEBIAN.md)
+- [Cohost с Klaris](docs/COHOST_KLARIS.md)
 
 ## MVP-модули
 

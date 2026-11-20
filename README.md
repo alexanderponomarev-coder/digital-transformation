@@ -42,13 +42,18 @@ sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh --webhook
 
 # С Docker
 sudo bash deploy/debian/install-docker.sh
+
+# Один VPS с Klaris (2fromlarec): Klaris :80, STRATUM :8080
+sudo STRATUM_HTTP_PORT=8080 STRATUM_API_PORT=8001 bash deploy/debian/install.sh
 ```
 
 После деплоя:
 
 ```bash
 curl -fsS http://YOUR_VPS_IP/api/health
-./scripts/smoke-deploy.sh http://YOUR_VPS_IP
+# или при cohost:
+curl -fsS http://YOUR_VPS_IP:8080/api/health
+./scripts/smoke-deploy.sh http://YOUR_VPS_IP:8080
 ```
 
 ## Документация
@@ -56,6 +61,7 @@ curl -fsS http://YOUR_VPS_IP/api/health
 - [Концепция v1.1](docs/CONCEPT.md)
 - [ТЗ v1.0](docs/TZ.md)
 - [Деплой Debian](docs/DEPLOY_DEBIAN.md)
+- [Cohost с Klaris](docs/COHOST_KLARIS.md)
 
 ## MVP-модули
 

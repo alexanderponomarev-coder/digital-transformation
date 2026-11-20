@@ -6,8 +6,6 @@ set -euo pipefail
 
 APP_ROOT="${APP_ROOT:-/opt/stratum}"
 WEB_ROOT="${WEB_ROOT:-/var/www/stratum}"
-HTTP_PORT="${1:-${STRATUM_HTTP_PORT:-8080}}"
-API_PORT=8000
 ENV_FILE="${ENV_FILE:-/etc/stratum/stratum.env}"
 API_LOG="/var/log/stratum-api.log"
 API_PID_FILE="/var/run/stratum-api.pid"
@@ -28,6 +26,8 @@ fi
 
 # shellcheck disable=SC1090
 [[ -f "${ENV_FILE}" ]] && set -a && source "${ENV_FILE}" && set +a
+HTTP_PORT="${1:-${STRATUM_HTTP_PORT:-8080}}"
+API_PORT="${STRATUM_API_PORT:-8000}"
 
 stop_api() {
   if [[ -f "${API_PID_FILE}" ]]; then
@@ -71,10 +71,14 @@ done
 
 # nginx site на нужный порт
 TMP_CONF="/etc/nginx/sites-available/stratum"
-sed "s/listen 80 default_server/listen ${HTTP_PORT} default_server/g; s/listen \[::\]:80 default_server/listen [::]:${HTTP_PORT} default_server/g" \
+sed \
+  -e "s/__STRATUM_HTTP_PORT__/${HTTP_PORT}/g" \
+  -e "s/__STRATUM_API_PORT__/${API_PORT}/g" \
   "${APP_ROOT}/deploy/debian/nginx-stratum.conf" > "${TMP_CONF}"
 ln -sfn "${TMP_CONF}" /etc/nginx/sites-enabled/stratum
-rm -f /etc/nginx/sites-enabled/default
+if [[ ! -e /etc/nginx/sites-enabled/klaris ]]; then
+  rm -f /etc/nginx/sites-enabled/default
+fi
 
 nginx -t
 

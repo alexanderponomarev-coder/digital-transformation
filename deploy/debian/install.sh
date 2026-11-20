@@ -7,7 +7,19 @@ REPO_DIR="${1:-$(cd "$(dirname "$0")/../.." && pwd)}"
 APP_ROOT="/opt/stratum"
 WEB_ROOT="/var/www/stratum"
 ENV_DIR="/etc/stratum"
+# Cohost with Klaris (2fromlarec): HTTP 8080, API 8001 — docs/COHOST_KLARIS.md
 HTTP_PORT="${STRATUM_HTTP_PORT:-80}"
+API_PORT="${STRATUM_API_PORT:-8000}"
+if [[ -f /etc/nginx/sites-enabled/klaris || -d /opt/klaris ]]; then
+  # auto-shift off Klaris ports when co-hosting on the same node
+  if [[ "${HTTP_PORT}" == "80" && -z "${STRATUM_HTTP_PORT:-}" ]]; then
+    HTTP_PORT=8080
+  fi
+  if [[ "${API_PORT}" == "8000" && -z "${STRATUM_API_PORT:-}" ]]; then
+    API_PORT=8001
+  fi
+  echo "==> обнаружен Klaris — STRATUM на :${HTTP_PORT} / API :${API_PORT}"
+fi
 
 if [[ "${EUID}" -ne 0 ]]; then
   echo "Запустите от root: sudo bash $0"
@@ -70,19 +82,30 @@ if [[ -d "${REPO_DIR}/.git" ]]; then
   grep -q '^STRATUM_GIT_BRANCH=' "${ENV_DIR}/stratum.env" || echo "STRATUM_GIT_BRANCH=main" >>"${ENV_DIR}/stratum.env"
   grep -q '^STRATUM_GIT_REMOTE=' "${ENV_DIR}/stratum.env" || echo "STRATUM_GIT_REMOTE=origin" >>"${ENV_DIR}/stratum.env"
 fi
+# порты в env
+grep -q '^STRATUM_HTTP_PORT=' "${ENV_DIR}/stratum.env" \
+  && sed -i "s|^STRATUM_HTTP_PORT=.*|STRATUM_HTTP_PORT=${HTTP_PORT}|" "${ENV_DIR}/stratum.env" \
+  || echo "STRATUM_HTTP_PORT=${HTTP_PORT}" >>"${ENV_DIR}/stratum.env"
+grep -q '^STRATUM_API_PORT=' "${ENV_DIR}/stratum.env" \
+  && sed -i "s|^STRATUM_API_PORT=.*|STRATUM_API_PORT=${API_PORT}|" "${ENV_DIR}/stratum.env" \
+  || echo "STRATUM_API_PORT=${API_PORT}" >>"${ENV_DIR}/stratum.env"
 chown root:stratum "${ENV_DIR}/stratum.env"
 
-# nginx site (optional non-80 port via listen directive rewrite)
+chmod +x "${APP_ROOT}/deploy/debian/"*.sh
+
+# nginx site from template placeholders
 NGINX_CONF="${APP_ROOT}/deploy/debian/nginx-stratum.conf"
-if [[ "${HTTP_PORT}" != "80" ]]; then
-  sed "s/listen 80/listen ${HTTP_PORT}/g; s/listen \[::\]:80/listen [::]:${HTTP_PORT}/g" \
-    "${NGINX_CONF}" > /tmp/stratum-nginx.conf
-  install -m 644 /tmp/stratum-nginx.conf /etc/nginx/sites-available/stratum
-else
-  install -m 644 "${NGINX_CONF}" /etc/nginx/sites-available/stratum
-fi
+sed \
+  -e "s/__STRATUM_HTTP_PORT__/${HTTP_PORT}/g" \
+  -e "s/__STRATUM_API_PORT__/${API_PORT}/g" \
+  "${NGINX_CONF}" > /tmp/stratum-nginx.conf
+# если Klaris уже default на :80 — убрать default_server у STRATUM на 8080 не обязательно
+install -m 644 /tmp/stratum-nginx.conf /etc/nginx/sites-available/stratum
 ln -sfn /etc/nginx/sites-available/stratum /etc/nginx/sites-enabled/stratum
-rm -f /etc/nginx/sites-enabled/default
+# не трогаем sites-enabled/klaris; default убираем только если нет klaris
+if [[ ! -e /etc/nginx/sites-enabled/klaris ]]; then
+  rm -f /etc/nginx/sites-enabled/default
+fi
 
 chown -R stratum:stratum "${APP_ROOT}"
 

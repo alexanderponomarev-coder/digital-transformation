@@ -167,6 +167,15 @@ make test
 
 ---
 
+## Вместе с Klaris (2fromlarec) на одном VPS
+
+См. [`docs/COHOST_KLARIS.md`](COHOST_KLARIS.md).
+
+```bash
+# Klaris занимает :80 / :8000 — STRATUM автоматически или явно:
+sudo STRATUM_HTTP_PORT=8080 STRATUM_API_PORT=8001 bash deploy/debian/install.sh
+```
+
 ## Регуляторика / хостинг РФ
 
 Для ПДн размещайте VPS на территории РФ; не направляйте чувствительные данные во внешние облачные LLM (см. `docs/CONCEPT.md`).

@@ -11,7 +11,10 @@ Group=stratum
 WorkingDirectory=/opt/stratum/backend
 EnvironmentFile=-/etc/stratum/stratum.env
 Environment=PATH=/opt/stratum/.venv/bin:/usr/bin
-ExecStart=/opt/stratum/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 2
+Environment=APP_ROOT=/opt/stratum
+Environment=ENV_FILE=/etc/stratum/stratum.env
+# Default 8000; cohost with Klaris → STRATUM_API_PORT=8001 in stratum.env
+ExecStart=/opt/stratum/deploy/debian/run-api.sh
 Restart=on-failure
 RestartSec=5
 TimeoutStartSec=30

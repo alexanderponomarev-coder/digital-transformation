@@ -103,6 +103,18 @@ export interface RoadmapPhase {
   investment_mln: number
 }
 
+export interface RoiBenefitLine {
+  id: string
+  description: string
+  process_step_id: string
+  opportunity_id?: string | null
+  hours_per_year?: number | null
+  hourly_rate?: number | null
+  cash_benefit?: number | null
+  included?: boolean
+  excluded_reason?: string | null
+}
+
 export interface RoiModel {
   investment_mln: number
   annual_benefit_mln: number
@@ -110,6 +122,16 @@ export interface RoiModel {
   tco_3y_mln: number
   kpis: { name: string; as_is: string; to_be: string }[]
   assumptions: string[]
+  kind?: 'illustrative' | 'calculated' | 'hours_only' | 'insufficient_inputs'
+  formula?: string
+  currency?: string
+  horizon_months?: number
+  monetary_roi?: number | null
+  hours_saved_per_year?: number | null
+  benefit_lines?: RoiBenefitLine[]
+  overlapping_steps?: string[]
+  missing_inputs?: string[]
+  disclaimer?: string
 }
 
 export interface RegulatoryCheck {

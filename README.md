@@ -57,6 +57,7 @@ curl -fsS -H 'Host: stratum.example.com' http://127.0.0.1/api/health
 - [Cohost с Klaris](docs/COHOST_KLARIS.md)
 - [Доступ API / ACL (P0)](docs/SECURITY.md)
 - [Норматив / версии / partial read (P1)](docs/P1_EVIDENCE.md)
+- [ROI engine (P2)](docs/P2_ROI.md)
 
 ## MVP-модули
 

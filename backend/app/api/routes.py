@@ -14,10 +14,13 @@ from app.models.schemas import (
     Opportunity,
     PlatformSnapshot,
     ProjectOverview,
+    RoiComputeRequest,
+    RoiModel,
 )
 from app.services import engine
 from app.services.acl import filter_snapshot_for_user, set_document_acl, user_can_read_document
 from app.services.regulatory import is_admissible, screen_opportunity
+from app.services.roi import compute_roi
 from app.services.store import store
 
 router = APIRouter()
@@ -175,6 +178,16 @@ def screen(
         "checks": [c.model_dump() for c in checks],
         "opportunity": payload.model_dump(),
     }
+
+
+@router.post("/roi/compute", response_model=RoiModel)
+def roi_compute(
+    payload: RoiComputeRequest,
+    auth: AuthContext = Depends(get_auth_context),
+) -> RoiModel:
+    """TC-04/05: hours without rate → hours_only; overlap → no double-count."""
+    _ = auth
+    return compute_roi(payload)
 
 
 @router.get("/documents/{document_id}")

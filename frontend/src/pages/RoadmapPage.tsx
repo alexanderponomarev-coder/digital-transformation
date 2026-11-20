@@ -10,8 +10,15 @@ export function RoadmapPage() {
       <div>
         <h2 className="font-display text-2xl font-bold">Дорожная карта и ROI</h2>
         <p className="mt-1 max-w-2xl text-sm text-ink-500">
-          Прогнозная оценка на этапе планирования. Фактический ROI — в V3 после внедрения.
+          {roi.disclaimer ||
+            'Прогнозная оценка на этапе планирования. Фактический ROI — в V3 после внедрения.'}
         </p>
+        {roi.kind && (
+          <p className="mt-2 inline-flex rounded-md bg-ink-100 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-ink-700">
+            kind: {roi.kind}
+            {roi.monetary_roi == null ? ' · денежный ROI не опубликован' : ` · ROI=${roi.monetary_roi}`}
+          </p>
+        )}
       </div>
 
       <section className="grid gap-4 md:grid-cols-4">

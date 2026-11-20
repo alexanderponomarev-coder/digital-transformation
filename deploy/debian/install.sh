@@ -7,28 +7,44 @@ REPO_DIR="${1:-$(cd "$(dirname "$0")/../.." && pwd)}"
 APP_ROOT="/opt/stratum"
 WEB_ROOT="/var/www/stratum"
 ENV_DIR="/etc/stratum"
+ENV_FILE="${ENV_DIR}/stratum.env"
 # Разделение с Klaris — по домену (оба на :80). API localhost: 8001 рядом с Klaris.
 # docs/INSTALL.md · docs/COHOST_KLARIS.md
-HTTP_PORT="${STRATUM_HTTP_PORT:-80}"
-API_PORT="${STRATUM_API_PORT:-8000}"
-SERVER_NAME="${STRATUM_SERVER_NAME:-_}"
+#
+# CLI / текущий shell перекрывает значения из /etc/stratum/stratum.env
+REQUESTED_HTTP_PORT="${STRATUM_HTTP_PORT:-}"
+REQUESTED_API_PORT="${STRATUM_API_PORT:-}"
+REQUESTED_SERVER_NAME="${STRATUM_SERVER_NAME:-}"
+if [[ -f "${ENV_FILE}" ]]; then
+  # shellcheck disable=SC1090
+  set -a && source "${ENV_FILE}" && set +a || true
+fi
+HTTP_PORT="${REQUESTED_HTTP_PORT:-${STRATUM_HTTP_PORT:-80}}"
+API_PORT="${REQUESTED_API_PORT:-${STRATUM_API_PORT:-8000}}"
+SERVER_NAME="${REQUESTED_SERVER_NAME:-${STRATUM_SERVER_NAME:-_}}"
 DEFAULT_SERVER=" default_server"
 COHOST=0
 if [[ -f /etc/nginx/sites-enabled/klaris || -d /opt/klaris ]]; then
   COHOST=1
 fi
 if [[ "${COHOST}" -eq 1 ]]; then
-  if [[ -z "${STRATUM_API_PORT:-}" ]]; then
+  if [[ -z "${REQUESTED_API_PORT}" && -z "${STRATUM_API_PORT:-}" ]]; then
     API_PORT=8001
+  elif [[ -n "${REQUESTED_API_PORT}" ]]; then
+    API_PORT="${REQUESTED_API_PORT}"
+  else
+    API_PORT="${STRATUM_API_PORT:-8001}"
   fi
-  if [[ "${SERVER_NAME}" == "_" ]]; then
-    echo "ERROR: рядом с Klaris нужен домен: STRATUM_SERVER_NAME=stratum.example.com" >&2
-    echo "  Пример: sudo STRATUM_SERVER_NAME=stratum.example.com bash deploy/debian/install.sh" >&2
+  if [[ "${SERVER_NAME}" == "_" || -z "${SERVER_NAME}" ]]; then
+    echo "ERROR: рядом с Klaris нужен домен STRATUM_SERVER_NAME" >&2
+    echo "  В команде:  sudo STRATUM_SERVER_NAME=stratum.example.com bash deploy/debian/install.sh ${REPO_DIR}" >&2
+    echo "  Или в файле ${ENV_FILE}:" >&2
+    echo "    STRATUM_SERVER_NAME=stratum.example.com" >&2
     exit 1
   fi
   # оба vhost на :80 — без default_server у STRATUM
   DEFAULT_SERVER=""
-  HTTP_PORT="${STRATUM_HTTP_PORT:-80}"
+  HTTP_PORT="${REQUESTED_HTTP_PORT:-${STRATUM_HTTP_PORT:-80}}"
   echo "==> cohost по домену: server_name=${SERVER_NAME} http=:${HTTP_PORT} api=:${API_PORT}"
 fi
 

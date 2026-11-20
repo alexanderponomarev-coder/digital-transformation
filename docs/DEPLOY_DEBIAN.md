@@ -90,7 +90,7 @@ STRATUM_GIT_REMOTE=origin
 STRATUM_WEBHOOK_SECRET=...
 ```
 
-Для **private** репозитория (рекомендуется — токен только в env, не в remote):
+Для **private** репозитория (токен только в env; скрипт сам сделает `git clone`, если клона нет):
 
 ```bash
 # /etc/stratum/stratum.env
@@ -98,8 +98,8 @@ STRATUM_GIT_DIR=/opt/stratum-src
 STRATUM_REPO_URL=https://github.com/ORG/REPO.git
 STRATUM_GITHUB_TOKEN=ghp_xxx   # Contents: Read
 
-# remote без токена:
-sudo git -C /opt/stratum-src remote set-url origin https://github.com/ORG/REPO.git
+sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh
+# → git clone … → timer; origin без токена
 sudo bash /opt/stratum/deploy/debian/auto-update.sh --force
 ```
 

@@ -60,17 +60,28 @@ fi
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
+# НЕ ставим debian npm вместе с NodeSource nodejs — они конфликтуют
+# (Klaris часто уже поставил nodesource nodejs, в нём свой npm).
 apt-get install -y -qq \
   python3 python3-venv python3-pip \
-  nginx curl ca-certificates rsync \
-  nodejs npm
+  nginx curl ca-certificates rsync
 
-NODE_MAJOR="$(node -v 2>/dev/null | sed 's/v//' | cut -d. -f1 || echo 0)"
-if [[ "${NODE_MAJOR}" -lt 20 ]]; then
-  echo "Node ${NODE_MAJOR} слишком старый — ставим NodeSource 22.x"
+ensure_node() {
+  local major
+  major="$(node -v 2>/dev/null | sed 's/^v//' | cut -d. -f1 || echo 0)"
+  if [[ "${major}" =~ ^[0-9]+$ ]] && [[ "${major}" -ge 20 ]] && command -v npm >/dev/null 2>&1; then
+    echo "==> Node $(node -v) / npm $(npm -v) уже есть — пропускаем"
+    return 0
+  fi
+  echo "==> Node.js 22 (NodeSource; включает npm, без пакета debian npm)"
+  # снять debian npm/nodejs, если мешают NodeSource
+  apt-get remove -y -qq npm nodejs libnode-dev 2>/dev/null || true
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
   apt-get install -y -qq nodejs
-fi
+  node -v
+  npm -v
+}
+ensure_node
 
 id -u stratum >/dev/null 2>&1 || useradd --system --home "${APP_ROOT}" --shell /usr/sbin/nologin stratum
 mkdir -p "${APP_ROOT}" "${WEB_ROOT}" "${ENV_DIR}"

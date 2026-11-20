@@ -444,6 +444,7 @@ ss -lntp | grep -E ':80 |:8000 |:8001 |:9000 |:9001 '
 | токен виден в `git remote -v` | `remote set-url` на публичный HTTPS; токен только в env |
 | `ERROR: рядом с Klaris нужен домен` | задайте `STRATUM_SERVER_NAME=stratum.example.com` |
 | nginx не стартует | `nginx -t`, два `default_server` на одном порту |
+| `nodejs` Conflicts `npm` при apt | Debian `npm` + NodeSource `nodejs` — перезапустите свежий `install.sh` (ставит только NodeSource) или: `sudo apt-get remove -y npm && sudo apt-get install -y nodejs` |
 | API не поднимается без systemd | `sudo STRATUM_SERVER_NAME=… bash /opt/stratum/deploy/debian/run-native.sh` |
 
 ---

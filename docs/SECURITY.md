@@ -2,10 +2,12 @@
 
 ## Bearer-токен
 
-| Режим | `STRATUM_API_TOKEN` | Поведение |
-|-------|---------------------|-----------|
-| Lab / local | пусто | API открыт; ACL по заголовку `X-Stratum-User` всё равно работает |
-| Shared / VPS | задан | Все `/api/*` кроме `/api/health` требуют `Authorization: Bearer <token>` |
+| Режим | `STRATUM_DEPLOY_MODE` | `STRATUM_API_TOKEN` | Поведение |
+|-------|----------------------|---------------------|-----------|
+| Lab / local | `lab` (default) | пусто | API открыт; ACL по `X-Stratum-User` работает |
+| Shared / demo | `demo` | задан | `/api/*` кроме `/api/health` → Bearer; UI показывает дисклеймер RAM |
+
+См. [P4_STAND.md](P4_STAND.md). Health публично отдаёт `deploy_mode`, `auth_enabled`, `reset_disabled`, `disclaimer`.
 
 Сброс демо:
 

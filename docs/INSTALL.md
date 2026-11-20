@@ -383,20 +383,24 @@ sudo systemctl status stratum-webhook --no-pager
 
 ---
 
-## 4. HTTPS (опционально)
+## 4. HTTPS (стенд / TLS)
 
-После DNS A-записи на IP сервера:
+После DNS A-записи на IP сервера и рабочего HTTP (`curl -H 'Host: …' http://127.0.0.1/api/health`):
 
 ```bash
-sudo apt-get install -y certbot python3-certbot-nginx
+# рекомендуемый helper (preflight + certbot --nginx + redirect)
+sudo bash /opt/stratum/deploy/debian/enable-tls.sh stratum.example.com --email ops@example.com
 
-# только STRATUM на :80
+# или вручную:
+sudo apt-get install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d stratum.example.com
 
 # cohost: отдельный сертификат на каждый server_name
 sudo certbot --nginx -d klaris.example.com
-sudo certbot --nginx -d stratum.example.com
+sudo bash /opt/stratum/deploy/debian/enable-tls.sh stratum.example.com
 ```
+
+Стенд `1-web.ru`: см. [P4_STAND.md](P4_STAND.md) (lab vs demo, troubleshooting «безопасное соединение»).
 
 ---
 
@@ -487,7 +491,7 @@ curl -fsS http://127.0.0.1/api/health
 - [ ] `/etc/stratum/stratum.env`: `STRATUM_SERVER_NAME` и порты верные  
 - [ ] `stratum-auto-update.timer` active (и webhook, если нужен)  
 - [ ] Private: `STRATUM_GITHUB_TOKEN` (или deploy key) + `auto-update.sh --force` OK  
-- [ ] Shared-стенд: `STRATUM_API_TOKEN` + `STRATUM_DISABLE_RESET=1` (см. [SECURITY.md](SECURITY.md))  
-- [ ] (Опционально) TLS / firewall / webhook в GitHub  
+- [ ] Shared-стенд: `STRATUM_DEPLOY_MODE=demo` + `STRATUM_API_TOKEN` + `STRATUM_DISABLE_RESET=1` ([P4_STAND.md](P4_STAND.md), [SECURITY.md](SECURITY.md))  
+- [ ] TLS: `https://…/api/health` OK / firewall 443 / webhook в GitHub  
 
-Связанные документы: [DEPLOY_DEBIAN.md](DEPLOY_DEBIAN.md), [COHOST_KLARIS.md](COHOST_KLARIS.md), [CONCEPT.md](CONCEPT.md).
+Связанные документы: [DEPLOY_DEBIAN.md](DEPLOY_DEBIAN.md), [COHOST_KLARIS.md](COHOST_KLARIS.md), [P4_STAND.md](P4_STAND.md), [CONCEPT.md](CONCEPT.md).

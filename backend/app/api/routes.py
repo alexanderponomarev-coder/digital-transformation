@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 
 from app import __version__
+from app.core.runtime import health_payload
 from app.core.security import AuthContext, assert_reset_allowed, get_auth_context
 from app.models.schemas import (
     AnswerQuestionRequest,
@@ -40,7 +41,7 @@ router = APIRouter()
 @router.get("/health")
 def health() -> dict:
     """Public liveness — no auth (load balancers / smoke)."""
-    return {"status": "ok", "version": __version__, "product": "STRATUM"}
+    return health_payload(version=__version__)
 
 
 @router.get("/snapshot", response_model=PlatformSnapshot)

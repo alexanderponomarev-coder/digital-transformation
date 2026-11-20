@@ -172,6 +172,9 @@ export interface ProjectOverview {
   approved_insights_count: number
   blocked_cases_count: number
   overall_coverage: number
+  deploy_mode?: 'lab' | 'demo'
+  persistence?: 'in_memory'
+  storage_disclaimer?: string
 }
 
 export interface PlatformSnapshot {

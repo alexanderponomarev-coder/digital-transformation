@@ -241,6 +241,10 @@ class ProjectOverview(BaseModel):
     approved_insights_count: int
     blocked_cases_count: int
     overall_coverage: float
+    # P4 — filled at serve time from STRATUM_DEPLOY_MODE / runtime
+    deploy_mode: Literal["lab", "demo"] = "lab"
+    persistence: Literal["in_memory"] = "in_memory"
+    storage_disclaimer: str = ""
 
 
 class AuditEvent(BaseModel):

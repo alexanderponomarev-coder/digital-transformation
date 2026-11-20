@@ -26,8 +26,18 @@ fi
 
 # shellcheck disable=SC1090
 [[ -f "${ENV_FILE}" ]] && set -a && source "${ENV_FILE}" && set +a
-HTTP_PORT="${1:-${STRATUM_HTTP_PORT:-8080}}"
+HTTP_PORT="${1:-${STRATUM_HTTP_PORT:-80}}"
 API_PORT="${STRATUM_API_PORT:-8000}"
+SERVER_NAME="${STRATUM_SERVER_NAME:-_}"
+DEFAULT_SERVER=" default_server"
+if [[ -f /etc/nginx/sites-enabled/klaris || -d /opt/klaris ]]; then
+  if [[ "${SERVER_NAME}" == "_" ]]; then
+    echo "ERROR: рядом с Klaris нужен домен: STRATUM_SERVER_NAME=stratum.example.com" >&2
+    exit 1
+  fi
+  DEFAULT_SERVER=""
+  API_PORT="${STRATUM_API_PORT:-8001}"
+fi
 
 stop_api() {
   if [[ -f "${API_PID_FILE}" ]]; then
@@ -69,16 +79,19 @@ for i in $(seq 1 40); do
   sleep 0.25
 done
 
-# nginx site на нужный порт
+# nginx site на нужный порт / домен
 TMP_CONF="/etc/nginx/sites-available/stratum"
-sed \
-  -e "s/__STRATUM_HTTP_PORT__/${HTTP_PORT}/g" \
-  -e "s/__STRATUM_API_PORT__/${API_PORT}/g" \
-  "${APP_ROOT}/deploy/debian/nginx-stratum.conf" > "${TMP_CONF}"
+python3 - <<PY
+from pathlib import Path
+src = Path("${APP_ROOT}/deploy/debian/nginx-stratum.conf").read_text()
+src = src.replace("__STRATUM_HTTP_PORT__", "${HTTP_PORT}")
+src = src.replace("__STRATUM_API_PORT__", "${API_PORT}")
+src = src.replace("__STRATUM_SERVER_NAME__", "${SERVER_NAME}")
+src = src.replace("__STRATUM_DEFAULT_SERVER__", """${DEFAULT_SERVER}""")
+Path("${TMP_CONF}").write_text(src)
+PY
 ln -sfn "${TMP_CONF}" /etc/nginx/sites-enabled/stratum
-if [[ ! -e /etc/nginx/sites-enabled/klaris ]]; then
-  rm -f /etc/nginx/sites-enabled/default
-fi
+rm -f /etc/nginx/sites-enabled/default
 
 nginx -t
 
@@ -102,9 +115,14 @@ else
   exit 1
 fi
 
-echo "Прокси: http://127.0.0.1:${HTTP_PORT}/"
-curl -fsS "http://127.0.0.1:${HTTP_PORT}/api/health"
+CURL_HOST=(-H "Host: ${SERVER_NAME}")
+if [[ "${SERVER_NAME}" == "_" ]]; then
+  CURL_HOST=()
+fi
+
+echo "Прокси: http://127.0.0.1:${HTTP_PORT}/ (Host: ${SERVER_NAME})"
+curl -fsS "${CURL_HOST[@]}" "http://127.0.0.1:${HTTP_PORT}/api/health"
 echo
-curl -fsS -o /dev/null -w "ui:%{http_code}\n" "http://127.0.0.1:${HTTP_PORT}/"
+curl -fsS "${CURL_HOST[@]}" -o /dev/null -w "ui:%{http_code}\n" "http://127.0.0.1:${HTTP_PORT}/"
 echo "OK. Логи API: ${API_LOG}"
 echo "Стоп API: kill \$(cat ${API_PID_FILE})"

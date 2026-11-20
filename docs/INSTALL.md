@@ -4,8 +4,8 @@
 
 Два сценария:
 
-1. **Только STRATUM** — занимает порты `:80` и `:8000`
-2. **Klaris + STRATUM на одном узле** — Klaris `:80`/`:8000`, STRATUM `:8080`/`:8001` (рекомендуется, если уже есть / будет 2fromlarec)
+1. **Только STRATUM** — `:80` + API `:8000` (catch-all `server_name`)
+2. **Klaris + STRATUM на одном узле** — оба на **`:80`**, разделение по **доменному имени** (`server_name`); API localhost Klaris `:8000`, STRATUM `:8001`
 
 Автообновление с GitHub (timer + опциональный webhook) — в конце каждого сценария.
 
@@ -17,7 +17,8 @@
 |------------|----------|
 | ОС | Debian 12+ (или Ubuntu 22.04/24.04 для Klaris-скриптов) |
 | Доступ | `root` или пользователь с `sudo` |
-| Сеть | открыты входящие TCP **80** (и **8080**, если cohost) |
+| Сеть | открыт входящий TCP **80** (и **443** после TLS) |
+| DNS (cohost) | два имени → один IP, напр. `klaris.example.com` и `stratum.example.com` |
 | Репозитории | `alexanderponomarev-coder/digital-transformation-` (STRATUM), опционально `…/2fromlarec` (Klaris) |
 | Для private GitHub | Personal Access Token с правом **Contents: Read** (или deploy key) |
 
@@ -105,6 +106,7 @@ sudo systemctl restart stratum-api
 
 ```bash
 STRATUM_CORS_ORIGINS=*
+STRATUM_SERVER_NAME=_
 STRATUM_HTTP_PORT=80
 STRATUM_API_PORT=8000
 STRATUM_GIT_DIR=/opt/stratum-src
@@ -116,20 +118,27 @@ STRATUM_GIT_REMOTE=origin
 
 ---
 
-## 2. Сценарий B — Klaris + STRATUM на одном узле
+## 2. Сценарий B — Klaris + STRATUM на одном узле (по доменам)
 
-Порты без конфликта:
+Оба vhost слушают **`:80`**. Разделение — `server_name` (Host / DNS).
 
-| Приложение | HTTP (nginx) | API (uvicorn) | Проверка |
-|------------|--------------|---------------|----------|
-| **Klaris** | **80** | **8000** | `http://IP/health` |
-| **STRATUM** | **8080** | **8001** | `http://IP:8080/api/health` |
+| Приложение | Домен | HTTP | API (localhost) | Проверка |
+|------------|-------|------|-----------------|----------|
+| **Klaris** | `klaris.example.com` | **80** | **8000** | `http://klaris.example.com/health` |
+| **STRATUM** | `stratum.example.com` | **80** | **8001** | `http://stratum.example.com/api/health` |
+
+DNS до установки (или сразу после):
+
+```text
+klaris.example.com.   A    VPS_IP
+stratum.example.com.  A    VPS_IP
+```
 
 Firewall (если ufw):
 
 ```bash
 sudo ufw allow 80/tcp
-sudo ufw allow 8080/tcp
+sudo ufw allow 443/tcp
 sudo ufw reload
 ```
 
@@ -146,15 +155,17 @@ sudo mkdir -p /etc/klaris
 echo 'KLARIS_GITHUB_TOKEN=ghp_xxx' | sudo tee -a /etc/klaris/klaris.env
 echo 'KLARIS_REPO_URL=https://github.com/alexanderponomarev-coder/2fromlarec.git' | sudo tee -a /etc/klaris/klaris.env
 echo 'KLARIS_BRANCH=main' | sudo tee -a /etc/klaris/klaris.env
+# домен Klaris (рекомендуется при cohost):
+echo 'KLARIS_SERVER_NAME=klaris.example.com' | sudo tee -a /etc/klaris/klaris.env
 
-sudo -E bash deploy/debian/install.sh
-# на Ubuntu: sudo -E bash deploy/ubuntu/install.sh
+sudo -E KLARIS_SERVER_NAME=klaris.example.com bash deploy/debian/install.sh
+# на Ubuntu: sudo -E KLARIS_SERVER_NAME=klaris.example.com bash deploy/ubuntu/install.sh
 ```
 
 Проверка Klaris:
 
 ```bash
-curl -fsS http://127.0.0.1/health
+curl -fsS -H 'Host: klaris.example.com' http://127.0.0.1/health
 curl -fsS http://127.0.0.1:8000/health
 sudo systemctl status klaris-api nginx --no-pager
 ```
@@ -170,7 +181,7 @@ sudo systemctl restart klaris-api
 ```bash
 sudo bash /opt/klaris/deploy/debian/enable-auto-update.sh
 sudo bash /opt/klaris/deploy/debian/enable-auto-update.sh --webhook
-# Webhook URL: http://IP/hooks/github
+# Webhook URL: https://klaris.example.com/hooks/github
 # Secret: KLARIS_WEBHOOK_SECRET в /etc/klaris/klaris.env
 ```
 
@@ -178,29 +189,30 @@ sudo bash /opt/klaris/deploy/debian/enable-auto-update.sh --webhook
 
 ### 2.2. Установка STRATUM рядом
 
+`install.sh` при наличии Klaris **требует** `STRATUM_SERVER_NAME` и ставит API на `:8001`, HTTP на `:80`.
+
 ```bash
 sudo git clone https://github.com/alexanderponomarev-coder/digital-transformation-.git /opt/stratum-src
 cd /opt/stratum-src
 sudo git checkout main
 
-# Явно задайте порты (если Klaris уже стоит, install.sh сам сдвинет на 8080/8001)
-sudo STRATUM_HTTP_PORT=8080 STRATUM_API_PORT=8001 bash deploy/debian/install.sh /opt/stratum-src
+sudo STRATUM_SERVER_NAME=stratum.example.com bash deploy/debian/install.sh /opt/stratum-src
 ```
 
 Проверка STRATUM:
 
 ```bash
-curl -fsS http://127.0.0.1:8080/api/health
-curl -fsS -o /dev/null -w "ui:%{http_code}\n" http://127.0.0.1:8080/
+curl -fsS -H 'Host: stratum.example.com' http://127.0.0.1/api/health
+curl -fsS -H 'Host: stratum.example.com' -o /dev/null -w "ui:%{http_code}\n" http://127.0.0.1/
 sudo systemctl status stratum-api --no-pager
-ss -lntp | grep -E ':80 |:8080 |:8000 |:8001 '
+ss -lntp | grep -E ':80 |:8000 |:8001 '
 ```
 
 Оба сервиса:
 
 ```bash
-curl -fsS http://127.0.0.1/health          # Klaris
-curl -fsS http://127.0.0.1:8080/api/health # STRATUM
+curl -fsS http://klaris.example.com/health
+curl -fsS http://stratum.example.com/api/health
 ```
 
 ---
@@ -264,9 +276,9 @@ sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh --webhook
 
 В GitHub → **Settings → Webhooks → Add webhook**:
 
-| Поле | Только STRATUM | Cohost (рядом с Klaris) |
-|------|----------------|-------------------------|
-| Payload URL | `http://IP/hooks/github` | `http://IP:8080/hooks/github` |
+| Поле | Только STRATUM | Cohost (по домену) |
+|------|----------------|---------------------|
+| Payload URL | `http://IP/hooks/github` | `https://stratum.example.com/hooks/github` |
 | Content type | `application/json` | то же |
 | Secret | `STRATUM_WEBHOOK_SECRET` из `/etc/stratum/stratum.env` | то же |
 | Events | Just the **push** event | то же |
@@ -274,7 +286,8 @@ sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh --webhook
 Проверка:
 
 ```bash
-curl -fsS http://127.0.0.1:9000/health || curl -fsS http://127.0.0.1:8080/hooks/github/health
+curl -fsS http://127.0.0.1:9000/health \
+  || curl -fsS -H 'Host: stratum.example.com' http://127.0.0.1/hooks/github/health
 sudo systemctl status stratum-webhook --no-pager
 ```
 
@@ -290,8 +303,9 @@ sudo apt-get install -y certbot python3-certbot-nginx
 # только STRATUM на :80
 sudo certbot --nginx -d stratum.example.com
 
-# cohost: отдельный server_name для Klaris на :80;
-# для STRATUM на :8080 — либо отдельный домен с proxy_pass на 8080, либо TLS-терминация снаружи
+# cohost: отдельный сертификат на каждый server_name
+sudo certbot --nginx -d klaris.example.com
+sudo certbot --nginx -d stratum.example.com
 ```
 
 ---
@@ -327,7 +341,7 @@ sudo journalctl -u klaris-api -f
 sudo bash /opt/klaris/deploy/ubuntu/doctor.sh --no-restart
 
 # порты
-ss -lntp | grep -E ':80 |:8080 |:8000 |:8001 |:9000 |:9001 '
+ss -lntp | grep -E ':80 |:8000 |:8001 |:9000 |:9001 '
 ```
 
 Типичные проблемы:
@@ -335,10 +349,11 @@ ss -lntp | grep -E ':80 |:8080 |:8000 |:8001 |:9000 |:9001 '
 | Симптом | Что проверить |
 |---------|----------------|
 | `502` / `504` на `/api/` | `systemctl status stratum-api`, порт `STRATUM_API_PORT` совпадает с nginx |
+| открывается Klaris вместо STRATUM | Host/DNS: нужен `STRATUM_SERVER_NAME`, curl с `-H 'Host: …'` |
 | `git fetch` fails | токен / deploy key, `STRATUM_GIT_DIR` |
-| конфликт порта 80 | Klaris уже слушает 80 → ставьте STRATUM на 8080 |
+| `ERROR: рядом с Klaris нужен домен` | задайте `STRATUM_SERVER_NAME=stratum.example.com` |
 | nginx не стартует | `nginx -t`, два `default_server` на одном порту |
-| API не поднимается без systemd | `sudo bash /opt/stratum/deploy/debian/run-native.sh 8080` |
+| API не поднимается без systemd | `sudo STRATUM_SERVER_NAME=… bash /opt/stratum/deploy/debian/run-native.sh` |
 
 ---
 
@@ -369,15 +384,15 @@ sudo docker compose up -d --build
 curl -fsS http://127.0.0.1/api/health
 ```
 
-На одном узле с Klaris native Docker на `:80` конфликтует — используйте native cohost (§2) или другой `STRATUM_HTTP_PORT`.
+На одном узле с Klaris native Docker на `:80` конфликтует — используйте native cohost по доменам (§2).
 
 ---
 
 ## 9. Чеклист «готово»
 
 - [ ] `curl` health STRATUM (и Klaris, если cohost) → OK  
-- [ ] UI открывается в браузере  
-- [ ] `/etc/stratum/stratum.env` заполнен, порты верные  
+- [ ] UI открывается в браузере по своему домену  
+- [ ] `/etc/stratum/stratum.env`: `STRATUM_SERVER_NAME` и порты верные  
 - [ ] `stratum-auto-update.timer` active (и webhook, если нужен)  
 - [ ] Private git: `sudo git -C /opt/stratum-src fetch` проходит  
 - [ ] (Опционально) TLS / firewall / webhook в GitHub  

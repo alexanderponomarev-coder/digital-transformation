@@ -36,6 +36,6 @@ fi
 git checkout "${BRANCH}"
 git merge --ff-only "${REMOTE}/${BRANCH}"
 docker compose up -d --build
-curl -fsS http://127.0.0.1/api/health || curl -fsS http://127.0.0.1:8080/api/health
+curl -fsS http://127.0.0.1/api/health || curl -fsS http://127.0.0.1:8000/api/health
 echo
 echo "docker update done: $(git rev-parse --short HEAD)"

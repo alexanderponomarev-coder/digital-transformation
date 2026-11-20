@@ -7,18 +7,29 @@ REPO_DIR="${1:-$(cd "$(dirname "$0")/../.." && pwd)}"
 APP_ROOT="/opt/stratum"
 WEB_ROOT="/var/www/stratum"
 ENV_DIR="/etc/stratum"
-# Cohost with Klaris (2fromlarec): HTTP 8080, API 8001 — docs/COHOST_KLARIS.md
+# Разделение с Klaris — по домену (оба на :80). API localhost: 8001 рядом с Klaris.
+# docs/INSTALL.md · docs/COHOST_KLARIS.md
 HTTP_PORT="${STRATUM_HTTP_PORT:-80}"
 API_PORT="${STRATUM_API_PORT:-8000}"
+SERVER_NAME="${STRATUM_SERVER_NAME:-_}"
+DEFAULT_SERVER=" default_server"
+COHOST=0
 if [[ -f /etc/nginx/sites-enabled/klaris || -d /opt/klaris ]]; then
-  # auto-shift off Klaris ports when co-hosting on the same node
-  if [[ "${HTTP_PORT}" == "80" && -z "${STRATUM_HTTP_PORT:-}" ]]; then
-    HTTP_PORT=8080
-  fi
-  if [[ "${API_PORT}" == "8000" && -z "${STRATUM_API_PORT:-}" ]]; then
+  COHOST=1
+fi
+if [[ "${COHOST}" -eq 1 ]]; then
+  if [[ -z "${STRATUM_API_PORT:-}" ]]; then
     API_PORT=8001
   fi
-  echo "==> обнаружен Klaris — STRATUM на :${HTTP_PORT} / API :${API_PORT}"
+  if [[ "${SERVER_NAME}" == "_" ]]; then
+    echo "ERROR: рядом с Klaris нужен домен: STRATUM_SERVER_NAME=stratum.example.com" >&2
+    echo "  Пример: sudo STRATUM_SERVER_NAME=stratum.example.com bash deploy/debian/install.sh" >&2
+    exit 1
+  fi
+  # оба vhost на :80 — без default_server у STRATUM
+  DEFAULT_SERVER=""
+  HTTP_PORT="${STRATUM_HTTP_PORT:-80}"
+  echo "==> cohost по домену: server_name=${SERVER_NAME} http=:${HTTP_PORT} api=:${API_PORT}"
 fi
 
 if [[ "${EUID}" -ne 0 ]]; then
@@ -82,30 +93,39 @@ if [[ -d "${REPO_DIR}/.git" ]]; then
   grep -q '^STRATUM_GIT_BRANCH=' "${ENV_DIR}/stratum.env" || echo "STRATUM_GIT_BRANCH=main" >>"${ENV_DIR}/stratum.env"
   grep -q '^STRATUM_GIT_REMOTE=' "${ENV_DIR}/stratum.env" || echo "STRATUM_GIT_REMOTE=origin" >>"${ENV_DIR}/stratum.env"
 fi
-# порты в env
-grep -q '^STRATUM_HTTP_PORT=' "${ENV_DIR}/stratum.env" \
-  && sed -i "s|^STRATUM_HTTP_PORT=.*|STRATUM_HTTP_PORT=${HTTP_PORT}|" "${ENV_DIR}/stratum.env" \
-  || echo "STRATUM_HTTP_PORT=${HTTP_PORT}" >>"${ENV_DIR}/stratum.env"
-grep -q '^STRATUM_API_PORT=' "${ENV_DIR}/stratum.env" \
-  && sed -i "s|^STRATUM_API_PORT=.*|STRATUM_API_PORT=${API_PORT}|" "${ENV_DIR}/stratum.env" \
-  || echo "STRATUM_API_PORT=${API_PORT}" >>"${ENV_DIR}/stratum.env"
+# порты / домен в env
+set_env() {
+  local key="$1" val="$2"
+  if grep -q "^${key}=" "${ENV_DIR}/stratum.env"; then
+    sed -i "s|^${key}=.*|${key}=${val}|" "${ENV_DIR}/stratum.env"
+  else
+    echo "${key}=${val}" >>"${ENV_DIR}/stratum.env"
+  fi
+}
+set_env STRATUM_HTTP_PORT "${HTTP_PORT}"
+set_env STRATUM_API_PORT "${API_PORT}"
+set_env STRATUM_SERVER_NAME "${SERVER_NAME}"
 chown root:stratum "${ENV_DIR}/stratum.env"
 
 chmod +x "${APP_ROOT}/deploy/debian/"*.sh
 
 # nginx site from template placeholders
 NGINX_CONF="${APP_ROOT}/deploy/debian/nginx-stratum.conf"
-sed \
-  -e "s/__STRATUM_HTTP_PORT__/${HTTP_PORT}/g" \
-  -e "s/__STRATUM_API_PORT__/${API_PORT}/g" \
-  "${NGINX_CONF}" > /tmp/stratum-nginx.conf
-# если Klaris уже default на :80 — убрать default_server у STRATUM на 8080 не обязательно
+# DEFAULT_SERVER may contain a leading space — escape for sed carefully via envsubst-like replace
+python3 - <<PY
+from pathlib import Path
+src = Path("${NGINX_CONF}").read_text()
+src = src.replace("__STRATUM_HTTP_PORT__", "${HTTP_PORT}")
+src = src.replace("__STRATUM_API_PORT__", "${API_PORT}")
+src = src.replace("__STRATUM_SERVER_NAME__", "${SERVER_NAME}")
+src = src.replace("__STRATUM_DEFAULT_SERVER__", """${DEFAULT_SERVER}""")
+Path("/tmp/stratum-nginx.conf").write_text(src)
+PY
 install -m 644 /tmp/stratum-nginx.conf /etc/nginx/sites-available/stratum
 ln -sfn /etc/nginx/sites-available/stratum /etc/nginx/sites-enabled/stratum
-# не трогаем sites-enabled/klaris; default убираем только если нет klaris
-if [[ ! -e /etc/nginx/sites-enabled/klaris ]]; then
-  rm -f /etc/nginx/sites-enabled/default
-fi
+# не трогаем sites-enabled/klaris
+rm -f /etc/nginx/sites-enabled/default
+
 
 chown -R stratum:stratum "${APP_ROOT}"
 
@@ -133,12 +153,24 @@ else
 fi
 
 IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+HOST_URL="http://${SERVER_NAME}"
+if [[ "${SERVER_NAME}" == "_" ]]; then
+  HOST_URL="http://${IP:-127.0.0.1}"
+  if [[ "${HTTP_PORT}" != "80" ]]; then
+    HOST_URL="${HOST_URL}:${HTTP_PORT}"
+  fi
+fi
 echo
 echo "STRATUM (native, без Docker) установлен."
-echo "  UI:  http://${IP:-127.0.0.1}:${HTTP_PORT}/"
-echo "  API: http://${IP:-127.0.0.1}:${HTTP_PORT}/api/health"
+echo "  UI:     ${HOST_URL}/"
+echo "  health: ${HOST_URL}/api/health"
+echo "  server_name: ${SERVER_NAME}"
+echo "  api localhost: ${API_PORT}"
 echo "  Код: ${APP_ROOT}"
 echo "  Env: ${ENV_DIR}/stratum.env"
+if [[ "${COHOST}" -eq 1 ]]; then
+  echo "  DNS: A/AAAA ${SERVER_NAME} → ${IP:-VPS_IP}"
+fi
 if [[ "${HAS_SYSTEMD}" -eq 1 ]]; then
   echo "  status: systemctl status stratum-api nginx"
   echo "  auto:   sudo bash ${APP_ROOT}/deploy/debian/enable-auto-update.sh"
@@ -146,4 +178,5 @@ if [[ "${HAS_SYSTEMD}" -eq 1 ]]; then
 else
   echo "  start:  sudo bash ${APP_ROOT}/deploy/debian/run-native.sh"
 fi
+
 

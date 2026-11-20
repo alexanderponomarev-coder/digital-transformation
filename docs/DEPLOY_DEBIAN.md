@@ -1,5 +1,7 @@
 # Публикация STRATUM на VPS Debian
 
+> **Полная пошаговая установка с нуля:** [INSTALL.md](INSTALL.md)
+
 Два пути:
 
 1. **Native (systemd + nginx) — без Docker** ← основной для обычного VPS

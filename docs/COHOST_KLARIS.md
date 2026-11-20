@@ -1,5 +1,7 @@
 # Один VPS: STRATUM + Klaris (2fromlarec)
 
+> Полный сценарий установки: [INSTALL.md](INSTALL.md) §2.
+
 См. также канон в Klaris: `deploy/COHOST_STRATUM.md` репозитория `alexanderponomarev-coder/2fromlarec`.
 
 ## Порты

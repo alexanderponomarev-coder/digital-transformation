@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Автообновление STRATUM с GitHub: git fetch/pull → update.sh при новых коммитах.
+# Private GitHub: STRATUM_GITHUB_TOKEN (или GITHUB_TOKEN) в /etc/stratum/stratum.env
 # sudo bash deploy/debian/auto-update.sh [--force]
 set -euo pipefail
 
@@ -24,12 +25,31 @@ if [[ "${EUID}" -ne 0 ]]; then
   exit 1
 fi
 
-# shellcheck disable=SC1090
-[[ -f "${ENV_FILE}" ]] && set -a && source "${ENV_FILE}" && set +a
+# Токен и ключи — без source всего env (чтобы не подтянуть мусор в shell).
+load_env_keys() {
+  local f="$1"
+  [[ -f "$f" ]] || return 0
+  local line key val
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" =~ ^(STRATUM_GITHUB_TOKEN|GITHUB_TOKEN|STRATUM_GIT_DIR|STRATUM_GIT_REMOTE|STRATUM_GIT_BRANCH|STRATUM_REPO_URL|STRATUM_SERVER_NAME)=(.*)$ ]] || continue
+    key="${BASH_REMATCH[1]}"
+    val="${BASH_REMATCH[2]}"
+    val="${val#\"}"
+    val="${val%\"}"
+    val="${val#\'}"
+    val="${val%\'}"
+    export "${key}=${val}"
+  done <"$f"
+}
+load_env_keys "${ENV_FILE}"
 
 GIT_DIR="${STRATUM_GIT_DIR:-/opt/stratum-src}"
 REMOTE="${STRATUM_GIT_REMOTE:-origin}"
 BRANCH="${STRATUM_GIT_BRANCH:-main}"
+REPO_URL="${STRATUM_REPO_URL:-}"
+GITHUB_TOKEN="${STRATUM_GITHUB_TOKEN:-${GITHUB_TOKEN:-}}"
 
 if [[ ! -d "${GIT_DIR}/.git" ]]; then
   log "ERROR: нет git-репозитория в ${GIT_DIR}. Склонируйте репо и укажите STRATUM_GIT_DIR."
@@ -45,11 +65,61 @@ fi
 
 cd "${GIT_DIR}"
 
-# безопасный pull: только ff-only
-if ! git fetch --prune "${REMOTE}" "${BRANCH}"; then
-  log "ERROR: git fetch не удался. Для private repo настройте deploy key или token в remote URL."
+# Публичный URL origin (без токена на диске).
+if [[ -z "${REPO_URL}" ]]; then
+  REPO_URL="$(git remote get-url "${REMOTE}" 2>/dev/null || true)"
+fi
+# убрать случайно прописанный токен из remote URL
+if [[ "${REPO_URL}" =~ ^https://[^@]+@github\.com/(.+)$ ]]; then
+  REPO_URL="https://github.com/${BASH_REMATCH[1]}"
+elif [[ "${REPO_URL}" =~ ^https://x-access-token:[^@]+@github\.com/(.+)$ ]]; then
+  REPO_URL="https://github.com/${BASH_REMATCH[1]}"
+fi
+if [[ -n "${REPO_URL}" ]]; then
+  git remote set-url "${REMOTE}" "${REPO_URL}" 2>/dev/null || true
+fi
+
+# HTTPS fetch с токеном только в памяти (как у Klaris).
+auth_repo_url() {
+  local url="$1"
+  if [[ -z "${GITHUB_TOKEN}" ]]; then
+    printf '%s' "${url}"
+    return 0
+  fi
+  if [[ "${url}" =~ ^https://github\.com/(.+)$ ]]; then
+    printf 'https://x-access-token:%s@github.com/%s' "${GITHUB_TOKEN}" "${BASH_REMATCH[1]}"
+    return 0
+  fi
+  if [[ "${url}" =~ ^https://([^@]+@)?github\.com/(.+)$ ]]; then
+    printf 'https://x-access-token:%s@github.com/%s' "${GITHUB_TOKEN}" "${BASH_REMATCH[2]}"
+    return 0
+  fi
+  printf '%s' "${url}"
+}
+
+export GIT_TERMINAL_PROMPT=0
+AUTH_URL="$(auth_repo_url "${REPO_URL}")"
+
+git_fetch_branch() {
+  if [[ -n "${GITHUB_TOKEN}" && "${AUTH_URL}" == https://* ]]; then
+    git fetch --prune "${AUTH_URL}" "+refs/heads/${BRANCH}:refs/remotes/${REMOTE}/${BRANCH}"
+  else
+    git fetch --prune "${REMOTE}" "${BRANCH}"
+  fi
+}
+
+if ! git_fetch_branch; then
+  log "ERROR: git fetch не удался."
+  if [[ -z "${GITHUB_TOKEN}" ]]; then
+    log "hint: private repo — добавьте в ${ENV_FILE}:"
+    log "  STRATUM_GITHUB_TOKEN=ghp_...   # fine-grained: Contents Read"
+    log "  # либо deploy key (SSH) — см. docs/INSTALL.md §3"
+  else
+    log "hint: токен есть, но fetch failed — проверьте Contents: Read и STRATUM_REPO_URL / remote"
+  fi
   exit 1
 fi
+
 LOCAL="$(git rev-parse HEAD)"
 if ! REMOTE_SHA="$(git rev-parse "${REMOTE}/${BRANCH}")"; then
   log "ERROR: нет ссылки ${REMOTE}/${BRANCH}"
@@ -80,8 +150,6 @@ log "готово: $(git rev-parse --short HEAD)"
 
 # health check (не валим timer при кратковременном рестарте)
 sleep 2
-# shellcheck disable=SC1090
-[[ -f /etc/stratum/stratum.env ]] && set -a && source /etc/stratum/stratum.env && set +a || true
 HOST_HDR=()
 if [[ -n "${STRATUM_SERVER_NAME:-}" && "${STRATUM_SERVER_NAME}" != "_" ]]; then
   HOST_HDR=(-H "Host: ${STRATUM_SERVER_NAME}")

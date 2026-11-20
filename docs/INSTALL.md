@@ -114,7 +114,7 @@ STRATUM_GIT_BRANCH=main
 STRATUM_GIT_REMOTE=origin
 ```
 
-Для private auto-update добавьте доступ к git (см. §3).
+Для **private** auto-update добавьте `STRATUM_GITHUB_TOKEN` (или deploy key) — см. §3.
 
 ---
 
@@ -217,44 +217,95 @@ curl -fsS http://stratum.example.com/api/health
 
 ---
 
-## 3. Автообновление STRATUM с GitHub
+## 3. Автообновление STRATUM с GitHub (в т.ч. private repo)
 
-Нужен git-клон `/opt/stratum-src` с рабочим `git fetch`.
+Нужен git-клон `/opt/stratum-src` и рабочий `git fetch` (публичный репозиторий — без токена; **private — нужен токен или deploy key**).
 
-### 3.1. Доступ к private repo
+### 3.1. Private repo — рекомендуемый способ: PAT в `stratum.env`
 
-Вариант A — токен только в памяти скрипта через `GIT_ASKPASS` / URL при fetch (предпочтительно не писать токен в `git remote`).
+Токен **не** пишется в `git remote` и не попадает в `.git/config`. `auto-update.sh` подставляет его только на время `git fetch` (как `KLARIS_GITHUB_TOKEN` у Klaris).
 
-Практичный вариант для VPS — **deploy key** (readonly):
+**1) Создайте токен в GitHub**
 
-```bash
-sudo -u root ssh-keygen -t ed25519 -f /root/.ssh/stratum_deploy -N ""
-# Добавьте /root/.ssh/stratum_deploy.pub в GitHub → Repo → Settings → Deploy keys (Read-only)
-sudo git -C /opt/stratum-src remote set-url origin git@github.com:alexanderponomarev-coder/digital-transformation-.git
-# ~/.ssh/config для root:
-# Host github.com
-#   IdentityFile /root/.ssh/stratum_deploy
-#   IdentitiesOnly yes
-sudo git -C /opt/stratum-src fetch origin
-```
+| Тип | Настройки |
+|-----|-----------|
+| **Fine-grained PAT** (предпочтительно) | Resource owner = владелец репо; Repository access = только `digital-transformation-`; Permissions → **Contents: Read-only** |
+| Classic PAT | scope `repo` (полный доступ к private — шире, чем нужно) |
 
-Вариант B — HTTPS с токеном в helper (не коммитьте `.env` в git):
+Срок жизни — по политике безопасности; после истечения обновите значение в env.
+
+**2) Клон без токена в remote (если ещё не клонировали)**
 
 ```bash
-# пример (токен живёт только на сервере):
+# одноразовый clone с токеном в URL:
+sudo git clone https://x-access-token:ВАШ_ТОКЕН@github.com/alexanderponomarev-coder/digital-transformation-.git /opt/stratum-src
+# сразу убрать токен из remote:
 sudo git -C /opt/stratum-src remote set-url origin \
-  https://x-access-token:ghp_xxx@github.com/alexanderponomarev-coder/digital-transformation-.git
+  https://github.com/alexanderponomarev-coder/digital-transformation-.git
 ```
 
-Пропишите в `/etc/stratum/stratum.env`:
+**3) Пропишите токен только в env на сервере**
+
+```bash
+sudo mkdir -p /etc/stratum
+sudo nano /etc/stratum/stratum.env
+```
+
+Минимум для private auto-update:
 
 ```bash
 STRATUM_GIT_DIR=/opt/stratum-src
 STRATUM_GIT_BRANCH=main
 STRATUM_GIT_REMOTE=origin
+STRATUM_REPO_URL=https://github.com/alexanderponomarev-coder/digital-transformation-.git
+STRATUM_GITHUB_TOKEN=ghp_xxxxxxxx
 ```
 
-### 3.2. Timer (~каждые 5 минут)
+Права на файл (токен внутри):
+
+```bash
+sudo chown root:stratum /etc/stratum/stratum.env
+sudo chmod 640 /etc/stratum/stratum.env
+```
+
+**4) Проверка fetch до включения timer**
+
+```bash
+sudo bash /opt/stratum/deploy/debian/auto-update.sh --force
+# в логе не должно быть "git fetch не удался"
+sudo git -C /opt/stratum-src remote -v
+# origin → https://github.com/...  БЕЗ токена в URL
+```
+
+### 3.2. Альтернатива — SSH deploy key (readonly)
+
+Если не хотите PAT:
+
+```bash
+sudo ssh-keygen -t ed25519 -f /root/.ssh/stratum_deploy -N ""
+# Добавьте /root/.ssh/stratum_deploy.pub → GitHub → Repo → Settings → Deploy keys → Allow read access
+
+sudo tee /root/.ssh/config >/dev/null <<'EOF'
+Host github.com
+  IdentityFile /root/.ssh/stratum_deploy
+  IdentitiesOnly yes
+EOF
+sudo chmod 600 /root/.ssh/config /root/.ssh/stratum_deploy
+
+sudo git -C /opt/stratum-src remote set-url origin \
+  git@github.com:alexanderponomarev-coder/digital-transformation-.git
+sudo git -C /opt/stratum-src fetch origin
+```
+
+При SSH `STRATUM_GITHUB_TOKEN` не нужен. Не смешивайте токенный HTTPS и SSH на одном remote без нужды.
+
+### 3.3. Что не делать
+
+- Не оставляйте `https://x-access-token:…@github.com/…` в `git remote` надолго (токен в `git remote -v`, бэкапах, логах).
+- Не коммитьте `stratum.env` / токен в репозиторий.
+- Не давайте токену права шире **Contents: Read**, если достаточно auto-update.
+
+### 3.4. Timer (~каждые 5 минут)
 
 ```bash
 sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh
@@ -268,7 +319,11 @@ sudo journalctl -u stratum-auto-update -n 50 --no-pager
 sudo bash /opt/stratum/deploy/debian/auto-update.sh --force
 ```
 
-### 3.3. Webhook (мгновенно на push в `main`)
+Если в логе `hint: private repo — добавьте STRATUM_GITHUB_TOKEN` — вернитесь к §3.1.
+
+### 3.5. Webhook (мгновенно на push в `main`)
+
+Работает и для private: GitHub шлёт событие на ваш URL; на сервере обновление всё равно идёт через `git fetch` с токеном/ключом из §3.1–3.2.
 
 ```bash
 sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh --webhook
@@ -290,6 +345,14 @@ curl -fsS http://127.0.0.1:9000/health \
   || curl -fsS -H 'Host: stratum.example.com' http://127.0.0.1/hooks/github/health
 sudo systemctl status stratum-webhook --no-pager
 ```
+
+### 3.6. Чеклист private auto-update
+
+- [ ] `origin` без токена: `git -C /opt/stratum-src remote -v`
+- [ ] `STRATUM_GITHUB_TOKEN=…` в `/etc/stratum/stratum.env` **или** SSH deploy key
+- [ ] `sudo bash …/auto-update.sh --force` → успех
+- [ ] `stratum-auto-update.timer` active
+- [ ] (Опционально) webhook + секрет
 
 ---
 
@@ -350,7 +413,8 @@ ss -lntp | grep -E ':80 |:8000 |:8001 |:9000 |:9001 '
 |---------|----------------|
 | `502` / `504` на `/api/` | `systemctl status stratum-api`, порт `STRATUM_API_PORT` совпадает с nginx |
 | открывается Klaris вместо STRATUM | Host/DNS: нужен `STRATUM_SERVER_NAME`, curl с `-H 'Host: …'` |
-| `git fetch` fails | токен / deploy key, `STRATUM_GIT_DIR` |
+| `git fetch` fails / hint про токен | `STRATUM_GITHUB_TOKEN` в `/etc/stratum/stratum.env` (§3.1) или deploy key (§3.2); `STRATUM_GIT_DIR` |
+| токен виден в `git remote -v` | `remote set-url` на публичный HTTPS; токен только в env |
 | `ERROR: рядом с Klaris нужен домен` | задайте `STRATUM_SERVER_NAME=stratum.example.com` |
 | nginx не стартует | `nginx -t`, два `default_server` на одном порту |
 | API не поднимается без systemd | `sudo STRATUM_SERVER_NAME=… bash /opt/stratum/deploy/debian/run-native.sh` |
@@ -394,7 +458,7 @@ curl -fsS http://127.0.0.1/api/health
 - [ ] UI открывается в браузере по своему домену  
 - [ ] `/etc/stratum/stratum.env`: `STRATUM_SERVER_NAME` и порты верные  
 - [ ] `stratum-auto-update.timer` active (и webhook, если нужен)  
-- [ ] Private git: `sudo git -C /opt/stratum-src fetch` проходит  
+- [ ] Private: `STRATUM_GITHUB_TOKEN` (или deploy key) + `auto-update.sh --force` OK  
 - [ ] (Опционально) TLS / firewall / webhook в GitHub  
 
 Связанные документы: [DEPLOY_DEBIAN.md](DEPLOY_DEBIAN.md), [COHOST_KLARIS.md](COHOST_KLARIS.md), [CONCEPT.md](CONCEPT.md).

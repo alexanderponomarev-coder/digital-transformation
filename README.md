@@ -35,6 +35,8 @@ make test
 sudo git clone https://github.com/alexanderponomarev-coder/digital-transformation-.git /opt/stratum-src
 cd /opt/stratum-src
 sudo bash deploy/debian/install.sh /opt/stratum-src
+# private repo: токен только в env (не в git remote)
+# echo 'STRATUM_GITHUB_TOKEN=ghp_xxx' | sudo tee -a /etc/stratum/stratum.env
 sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh --webhook
 curl -fsS http://127.0.0.1/api/health
 ```

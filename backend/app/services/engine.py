@@ -176,6 +176,9 @@ def ingest_document(
     format_value: str,
     summary: str = "",
     content_hint: str = "",
+    *,
+    owner_id: str | None = None,
+    acl_readers: list[str] | None = None,
 ) -> tuple[PlatformSnapshot, ClassifyResult]:
     classified = classify_document(title, format_value, summary, content_hint)
 
@@ -185,13 +188,18 @@ def ingest_document(
         None,
     )
     document = classified.document
+    acl_updates: dict = {
+        "owner_id": owner_id,
+        "acl_readers": list(acl_readers or []),
+    }
     if existing:
-        document = document.model_copy(
-            update={
+        acl_updates.update(
+            {
                 "version": existing.version + 1,
                 "replaces_id": existing.id,
             }
         )
+    document = document.model_copy(update=acl_updates)
 
     docs = [document, *snapshot.documents]
     facts = [*classified.facts, *snapshot.facts]

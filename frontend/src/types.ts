@@ -31,6 +31,8 @@ export interface DocumentRecord {
   size_label: string
   summary: string
   status: string
+  owner_id?: string | null
+  acl_readers?: string[]
 }
 
 export interface BlindZone {

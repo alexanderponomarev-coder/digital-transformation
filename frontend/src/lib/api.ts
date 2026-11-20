@@ -2,10 +2,37 @@ import type { ClassifyResult, Opportunity, PlatformSnapshot } from '../types'
 
 const BASE = '/api'
 
+function readStore(key: string): string {
+  try {
+    return sessionStorage.getItem(key) || ''
+  } catch {
+    return ''
+  }
+}
+
+function authHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  const token =
+    (import.meta.env.VITE_STRATUM_API_TOKEN as string | undefined) ||
+    readStore('STRATUM_API_TOKEN')
+  const user =
+    (import.meta.env.VITE_STRATUM_USER as string | undefined) ||
+    readStore('STRATUM_USER')
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+  if (user) {
+    headers['X-Stratum-User'] = user
+  }
+  return headers
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...(init?.headers || {}) },
     ...init,
+    headers: { ...authHeaders(), ...(init?.headers || {}) },
   })
   if (!res.ok) {
     const detail = await res.text()
@@ -21,11 +48,22 @@ export const api = {
     format: string
     summary?: string
     content_hint?: string
+    acl_readers?: string[]
   }) =>
     request<ClassifyResult>('/documents/upload', {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+  setDocumentAcl: (
+    id: string,
+    body: { acl_readers: string[]; owner_id?: string | null },
+  ) =>
+    request<PlatformSnapshot>(`/documents/${id}/acl`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
+  getDocument: (id: string) =>
+    request<{ document: unknown; facts: unknown[] }>(`/documents/${id}`),
   answerQuestion: (id: string, answer: string) =>
     request<PlatformSnapshot>(`/questions/${id}/answer`, {
       method: 'POST',

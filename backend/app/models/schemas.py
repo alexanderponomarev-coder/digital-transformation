@@ -71,6 +71,9 @@ class DocumentRecord(BaseModel):
     size_label: str = ""
     summary: str = ""
     status: Literal["processing", "classified", "ready"] = "ready"
+    # ACL: empty acl_readers = readable by all callers; else owner + listed users
+    owner_id: str | None = None
+    acl_readers: list[str] = Field(default_factory=list)
 
 
 class BlindZone(BaseModel):
@@ -215,6 +218,13 @@ class DocumentUploadRequest(BaseModel):
     format: DocFormat = DocFormat.PDF
     summary: str = ""
     content_hint: str = ""
+    # If non-empty, document is restricted to owner + these user ids
+    acl_readers: list[str] = Field(default_factory=list)
+
+
+class DocumentAclRequest(BaseModel):
+    acl_readers: list[str]
+    owner_id: str | None = None
 
 
 class AnswerQuestionRequest(BaseModel):

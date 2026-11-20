@@ -33,8 +33,11 @@ class PlatformStore:
             return self._snapshot.model_copy(deep=True)
 
     def reset(self) -> PlatformSnapshot:
+        from app.services import audit_log
+
         with self._lock:
             self._snapshot = build_snapshot()
+            audit_log.clear()
             return self._snapshot.model_copy(deep=True)
 
 

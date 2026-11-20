@@ -194,6 +194,42 @@ export interface PlatformSnapshot {
   }
 }
 
+export interface AuditEvent {
+  id: string
+  ts: string
+  actor: string
+  action: string
+  resource?: string
+  tools_invoked?: string[]
+  allowed?: boolean
+  detail?: string
+}
+
+export interface AlternativeOutcome {
+  kind: 'as_is' | 'rules_engine' | 'agent_hitl'
+  decision: string
+  requires_hitl: boolean
+  writes_to_erp: boolean
+  latency_hours: number
+  rationale: string
+}
+
+export interface ComparisonCaseResult {
+  case_id: string
+  as_is: AlternativeOutcome
+  rules_engine: AlternativeOutcome
+  agent_hitl: AlternativeOutcome
+  rules_agent_agree: boolean
+  notes: string
+}
+
+export interface ComparisonResponse {
+  process_step_id: string
+  cases: ComparisonCaseResult[]
+  agreement_rate: number
+  summary: string
+}
+
 export interface ClassifyResult {
   document: DocumentRecord
   facts: Fact[]

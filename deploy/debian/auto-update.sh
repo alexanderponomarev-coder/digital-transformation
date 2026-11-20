@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Автообновление STRATUM с GitHub: git fetch/pull → update.sh при новых коммитах.
+# Автообновление STRATUM с GitHub: clone (если нет) → fetch/pull → update.sh.
 # Private GitHub: STRATUM_GITHUB_TOKEN (или GITHUB_TOKEN) в /etc/stratum/stratum.env
 # sudo bash deploy/debian/auto-update.sh [--force]
 set -euo pipefail
@@ -10,6 +10,7 @@ FORCE=0
 ENV_FILE="${ENV_FILE:-/etc/stratum/stratum.env}"
 APP_ROOT="${APP_ROOT:-/opt/stratum}"
 LOG_TAG="stratum-auto-update"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # /var/lock → /run/lock; на некоторых хостах symlink битый — создаём /run/lock
 if [[ -d /run/lock ]] || mkdir -p /run/lock 2>/dev/null; then
   LOCK_DIR="${LOCK_DIR:-/run/lock}"
@@ -25,36 +26,15 @@ if [[ "${EUID}" -ne 0 ]]; then
   exit 1
 fi
 
-# Токен и ключи — без source всего env (чтобы не подтянуть мусор в shell).
-load_env_keys() {
-  local f="$1"
-  [[ -f "$f" ]] || return 0
-  local line key val
-  while IFS= read -r line || [[ -n "$line" ]]; do
-    line="${line%$'\r'}"
-    [[ "$line" =~ ^[[:space:]]*# ]] && continue
-    [[ "$line" =~ ^(STRATUM_GITHUB_TOKEN|GITHUB_TOKEN|STRATUM_GIT_DIR|STRATUM_GIT_REMOTE|STRATUM_GIT_BRANCH|STRATUM_REPO_URL|STRATUM_SERVER_NAME)=(.*)$ ]] || continue
-    key="${BASH_REMATCH[1]}"
-    val="${BASH_REMATCH[2]}"
-    val="${val#\"}"
-    val="${val%\"}"
-    val="${val#\'}"
-    val="${val%\'}"
-    export "${key}=${val}"
-  done <"$f"
-}
-load_env_keys "${ENV_FILE}"
+# shellcheck source=git-auth.sh
+source "${SCRIPT_DIR}/git-auth.sh"
+stratum_load_git_env "${ENV_FILE}"
 
 GIT_DIR="${STRATUM_GIT_DIR:-/opt/stratum-src}"
 REMOTE="${STRATUM_GIT_REMOTE:-origin}"
 BRANCH="${STRATUM_GIT_BRANCH:-main}"
-REPO_URL="${STRATUM_REPO_URL:-}"
+REPO_URL="${STRATUM_REPO_URL:-${STRATUM_DEFAULT_REPO_URL}}"
 GITHUB_TOKEN="${STRATUM_GITHUB_TOKEN:-${GITHUB_TOKEN:-}}"
-
-if [[ ! -d "${GIT_DIR}/.git" ]]; then
-  log "ERROR: нет git-репозитория в ${GIT_DIR}. Склонируйте репо и укажите STRATUM_GIT_DIR."
-  exit 1
-fi
 
 mkdir -p "$(dirname "${LOCK_FILE}")"
 exec 9>"${LOCK_FILE}"
@@ -63,42 +43,24 @@ if ! flock -n 9; then
   exit 0
 fi
 
+if ! stratum_ensure_git_clone "${GIT_DIR}" "${BRANCH}" "${REPO_URL}" log; then
+  exit 1
+fi
+
 cd "${GIT_DIR}"
 
-# Публичный URL origin (без токена на диске).
-if [[ -z "${REPO_URL}" ]]; then
-  REPO_URL="$(git remote get-url "${REMOTE}" 2>/dev/null || true)"
-fi
-# убрать случайно прописанный токен из remote URL
-if [[ "${REPO_URL}" =~ ^https://[^@]+@github\.com/(.+)$ ]]; then
-  REPO_URL="https://github.com/${BASH_REMATCH[1]}"
-elif [[ "${REPO_URL}" =~ ^https://x-access-token:[^@]+@github\.com/(.+)$ ]]; then
-  REPO_URL="https://github.com/${BASH_REMATCH[1]}"
-fi
-if [[ -n "${REPO_URL}" ]]; then
-  git remote set-url "${REMOTE}" "${REPO_URL}" 2>/dev/null || true
-fi
-
-# HTTPS fetch с токеном только в памяти (как у Klaris).
-auth_repo_url() {
-  local url="$1"
-  if [[ -z "${GITHUB_TOKEN}" ]]; then
-    printf '%s' "${url}"
-    return 0
+REPO_URL="$(stratum_public_repo_url "${REPO_URL}")"
+if [[ -z "${REPO_URL}" || "${REPO_URL}" == "${STRATUM_DEFAULT_REPO_URL}" ]]; then
+  # если в env пусто — взять public URL с origin (уже без токена после ensure)
+  ORIGIN_URL="$(git remote get-url "${REMOTE}" 2>/dev/null || true)"
+  if [[ -n "${ORIGIN_URL}" ]]; then
+    REPO_URL="$(stratum_public_repo_url "${ORIGIN_URL}")"
   fi
-  if [[ "${url}" =~ ^https://github\.com/(.+)$ ]]; then
-    printf 'https://x-access-token:%s@github.com/%s' "${GITHUB_TOKEN}" "${BASH_REMATCH[1]}"
-    return 0
-  fi
-  if [[ "${url}" =~ ^https://([^@]+@)?github\.com/(.+)$ ]]; then
-    printf 'https://x-access-token:%s@github.com/%s' "${GITHUB_TOKEN}" "${BASH_REMATCH[2]}"
-    return 0
-  fi
-  printf '%s' "${url}"
-}
+fi
+git remote set-url "${REMOTE}" "${REPO_URL}" 2>/dev/null || true
 
 export GIT_TERMINAL_PROMPT=0
-AUTH_URL="$(auth_repo_url "${REPO_URL}")"
+AUTH_URL="$(stratum_auth_repo_url "${REPO_URL}")"
 
 git_fetch_branch() {
   if [[ -n "${GITHUB_TOKEN}" && "${AUTH_URL}" == https://* ]]; then

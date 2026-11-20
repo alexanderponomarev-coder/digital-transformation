@@ -51,15 +51,29 @@ cd /opt/stratum-src
 sudo git checkout main
 ```
 
-**Приватный** репозиторий (токен не сохраняйте в истории shell — лучше сразу в env-файл после установки):
+**Приватный** репозиторий — токен в env, затем `git clone` без секрета в argv/`git remote`:
 
 ```bash
-# одноразово для clone:
-sudo git clone https://x-access-token:ВАШ_ТОКЕН@github.com/alexanderponomarev-coder/digital-transformation-.git /opt/stratum-src
+sudo mkdir -p /etc/stratum
+sudo tee /etc/stratum/stratum.env >/dev/null <<'EOF'
+STRATUM_REPO_URL=https://github.com/alexanderponomarev-coder/digital-transformation-.git
+STRATUM_GIT_DIR=/opt/stratum-src
+STRATUM_GIT_BRANCH=main
+STRATUM_GITHUB_TOKEN=ghp_xxxxxxxx
+EOF
+sudo chmod 640 /etc/stratum/stratum.env
+
+# clone: токен читается из env, в origin остаётся публичный URL
+sudo bash -c '
+  set -a; source /etc/stratum/stratum.env; set +a
+  AUTH="https://x-access-token:${STRATUM_GITHUB_TOKEN}@github.com/${STRATUM_REPO_URL#https://github.com/}"
+  git clone --branch "${STRATUM_GIT_BRANCH:-main}" "$AUTH" "${STRATUM_GIT_DIR}"
+  git -C "${STRATUM_GIT_DIR}" remote set-url origin "${STRATUM_REPO_URL}"
+'
 cd /opt/stratum-src
-# убрать токен из remote URL:
-sudo git -C /opt/stratum-src remote set-url origin https://github.com/alexanderponomarev-coder/digital-transformation-.git
 ```
+
+После первой установки `enable-auto-update.sh` / `auto-update.sh` сами умеют **клонировать**, если `/opt/stratum-src` ещё нет (нужны `STRATUM_GITHUB_TOKEN` + `STRATUM_REPO_URL` в env) — см. §3.1.
 
 ### 1.2. Установка (native, без Docker)
 
@@ -234,45 +248,51 @@ curl -fsS http://stratum.example.com/api/health
 
 Срок жизни — по политике безопасности; после истечения обновите значение в env.
 
-**2) Клон без токена в remote (если ещё не клонировали)**
-
-```bash
-# одноразовый clone с токеном в URL:
-sudo git clone https://x-access-token:ВАШ_ТОКЕН@github.com/alexanderponomarev-coder/digital-transformation-.git /opt/stratum-src
-# сразу убрать токен из remote:
-sudo git -C /opt/stratum-src remote set-url origin \
-  https://github.com/alexanderponomarev-coder/digital-transformation-.git
-```
-
-**3) Пропишите токен только в env на сервере**
+**2) Пропишите токен и URL в env (до clone)**
 
 ```bash
 sudo mkdir -p /etc/stratum
-sudo nano /etc/stratum/stratum.env
-```
-
-Минимум для private auto-update:
-
-```bash
+sudo tee /etc/stratum/stratum.env >/dev/null <<'EOF'
 STRATUM_GIT_DIR=/opt/stratum-src
 STRATUM_GIT_BRANCH=main
 STRATUM_GIT_REMOTE=origin
 STRATUM_REPO_URL=https://github.com/alexanderponomarev-coder/digital-transformation-.git
 STRATUM_GITHUB_TOKEN=ghp_xxxxxxxx
-```
-
-Права на файл (токен внутри):
-
-```bash
-sudo chown root:stratum /etc/stratum/stratum.env
+EOF
+sudo chown root:stratum /etc/stratum/stratum.env 2>/dev/null || true
 sudo chmod 640 /etc/stratum/stratum.env
 ```
 
-**4) Проверка fetch до включения timer**
+**3) `git clone` — два способа**
+
+**A. Скрипт сам клонирует** (если `/opt/stratum-src` ещё нет; токен только из env):
+
+```bash
+# после install.sh (скрипты уже в /opt/stratum):
+sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh
+# или:
+sudo bash /opt/stratum/deploy/debian/auto-update.sh --force
+```
+
+В логе будет `git clone https://github.com/… → /opt/stratum-src`, затем `origin` **без** токена.
+
+**B. Вручную** (токен из env, не в истории как argv):
+
+```bash
+sudo bash -c '
+  set -a; source /etc/stratum/stratum.env; set +a
+  AUTH="https://x-access-token:${STRATUM_GITHUB_TOKEN}@github.com/${STRATUM_REPO_URL#https://github.com/}"
+  git clone --branch "${STRATUM_GIT_BRANCH:-main}" "$AUTH" "${STRATUM_GIT_DIR}"
+  git -C "${STRATUM_GIT_DIR}" remote set-url origin "${STRATUM_REPO_URL}"
+'
+```
+
+Не оставляйте `https://x-access-token:…@…` в `git remote -v`.
+
+**4) Проверка fetch**
 
 ```bash
 sudo bash /opt/stratum/deploy/debian/auto-update.sh --force
-# в логе не должно быть "git fetch не удался"
 sudo git -C /opt/stratum-src remote -v
 # origin → https://github.com/...  БЕЗ токена в URL
 ```
@@ -348,8 +368,9 @@ sudo systemctl status stratum-webhook --no-pager
 
 ### 3.6. Чеклист private auto-update
 
+- [ ] `STRATUM_GITHUB_TOKEN` + `STRATUM_REPO_URL` в `/etc/stratum/stratum.env` **или** SSH deploy key
+- [ ] клон есть: `/opt/stratum-src/.git` (создал `enable-auto-update` / `auto-update` или ручной clone)
 - [ ] `origin` без токена: `git -C /opt/stratum-src remote -v`
-- [ ] `STRATUM_GITHUB_TOKEN=…` в `/etc/stratum/stratum.env` **или** SSH deploy key
 - [ ] `sudo bash …/auto-update.sh --force` → успех
 - [ ] `stratum-auto-update.timer` active
 - [ ] (Опционально) webhook + секрет

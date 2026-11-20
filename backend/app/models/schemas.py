@@ -243,6 +243,55 @@ class ProjectOverview(BaseModel):
     overall_coverage: float
 
 
+class AuditEvent(BaseModel):
+    id: str
+    ts: str
+    actor: str
+    action: str
+    resource: str = ""
+    tools_invoked: list[str] = Field(default_factory=list)
+    allowed: bool = True
+    detail: str = ""
+
+
+class AlternativeOutcome(BaseModel):
+    kind: Literal["as_is", "rules_engine", "agent_hitl"]
+    decision: str
+    requires_hitl: bool = False
+    writes_to_erp: bool = False
+    latency_hours: float = 0.0
+    rationale: str = ""
+
+
+class ComparisonCase(BaseModel):
+    id: str
+    credit_score: float
+    debt_ratio: float
+    overdue_days: int = 0
+    queue_hours_as_is: float | None = 9.0
+
+
+class ComparisonCaseResult(BaseModel):
+    case_id: str
+    as_is: AlternativeOutcome
+    rules_engine: AlternativeOutcome
+    agent_hitl: AlternativeOutcome
+    rules_agent_agree: bool
+    notes: str = ""
+
+
+class ComparisonRequest(BaseModel):
+    process_step_id: str = "otc.credit_control"
+    cases: list[ComparisonCase] = Field(default_factory=list)
+
+
+class ComparisonResponse(BaseModel):
+    process_step_id: str
+    cases: list[ComparisonCaseResult]
+    agreement_rate: float
+    summary: str
+
+
 class PlatformSnapshot(BaseModel):
     overview: ProjectOverview
     layers: list[MethodologyLayer]

@@ -7,7 +7,10 @@ from app.core.security import AuthContext, assert_reset_allowed, get_auth_contex
 from app.models.schemas import (
     AnswerQuestionRequest,
     ApprovalRequest,
+    AuditEvent,
     ClassifyResult,
+    ComparisonRequest,
+    ComparisonResponse,
     ConfirmVersionRequest,
     DocumentAclRequest,
     DocumentUploadRequest,
@@ -17,11 +20,19 @@ from app.models.schemas import (
     RoiComputeRequest,
     RoiModel,
 )
-from app.services import engine
+from app.services import audit_log, engine
 from app.services.acl import filter_snapshot_for_user, set_document_acl, user_can_read_document
+from app.services.compare import compare_alternatives, default_otc_cases
 from app.services.regulatory import is_admissible, screen_opportunity
 from app.services.roi import compute_roi
 from app.services.store import store
+
+_INJECTION_MARKERS = (
+    "игнорируй правила",
+    "ignore previous",
+    "отправь данные наружу",
+    "exfiltrate",
+)
 
 router = APIRouter()
 
@@ -65,7 +76,22 @@ def upload_document(
         return updated
 
     store.mutate(mutator)
-    return holder["result"]
+    result = holder["result"]
+    blob = f"{payload.title} {payload.summary} {payload.content_hint}".lower()
+    injection = any(m in blob for m in _INJECTION_MARKERS)
+    audit_log.record(
+        actor=auth.user_id,
+        action="documents.upload",
+        resource=result.document.id,
+        tools_invoked=[],  # MVP: no external tools; injection must not spawn calls
+        allowed=True,
+        detail=(
+            "Инструкция внутри документа проигнорирована; tool-calls не выполнялись."
+            if injection
+            else f"status={result.document.status}; facts={len(result.facts)}"
+        ),
+    )
+    return result
 
 
 @router.post("/documents/{document_id}/confirm-version", response_model=PlatformSnapshot)
@@ -186,8 +212,44 @@ def roi_compute(
     auth: AuthContext = Depends(get_auth_context),
 ) -> RoiModel:
     """TC-04/05: hours without rate → hours_only; overlap → no double-count."""
+    result = compute_roi(payload)
+    audit_log.record(
+        actor=auth.user_id,
+        action="roi.compute",
+        resource=result.kind,
+        tools_invoked=[],
+        detail=f"monetary_roi={result.monetary_roi}",
+    )
+    return result
+
+
+@router.post("/compare/alternatives", response_model=ComparisonResponse)
+def compare_alts(
+    payload: ComparisonRequest,
+    auth: AuthContext = Depends(get_auth_context),
+) -> ComparisonResponse:
+    """P3: AS-IS vs rules engine vs agent+HITL on the same case pack."""
+    req = payload
+    if not req.cases:
+        req = payload.model_copy(update={"cases": default_otc_cases()})
+    result = compare_alternatives(req)
+    audit_log.record(
+        actor=auth.user_id,
+        action="compare.alternatives",
+        resource=result.process_step_id,
+        tools_invoked=[],
+        detail=result.summary,
+    )
+    return result
+
+
+@router.get("/audit/runs", response_model=list[AuditEvent])
+def audit_runs(
+    limit: int = 100,
+    auth: AuthContext = Depends(get_auth_context),
+) -> list[AuditEvent]:
     _ = auth
-    return compute_roi(payload)
+    return audit_log.list_events(limit=limit)
 
 
 @router.get("/documents/{document_id}")
@@ -208,4 +270,11 @@ def get_document(
 @router.post("/reset", response_model=PlatformSnapshot)
 def reset(auth: AuthContext = Depends(get_auth_context)) -> PlatformSnapshot:
     assert_reset_allowed(auth)
-    return store.reset()
+    snap = store.reset()
+    audit_log.record(
+        actor=auth.user_id,
+        action="store.reset",
+        tools_invoked=[],
+        detail="snapshot restored to seed; audit buffer cleared then this event appended",
+    )
+    return snap

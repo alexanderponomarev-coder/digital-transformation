@@ -1,4 +1,11 @@
-import type { ClassifyResult, Opportunity, PlatformSnapshot, RoiModel } from '../types'
+import type {
+  AuditEvent,
+  ClassifyResult,
+  ComparisonResponse,
+  Opportunity,
+  PlatformSnapshot,
+  RoiModel,
+} from '../types'
 
 const BASE = '/api'
 
@@ -93,5 +100,12 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+  compareAlternatives: (body: Record<string, unknown> = {}) =>
+    request<ComparisonResponse>('/compare/alternatives', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  auditRuns: (limit = 100) =>
+    request<AuditEvent[]>(`/audit/runs?limit=${limit}`),
   reset: () => request<PlatformSnapshot>('/reset', { method: 'POST' }),
 }

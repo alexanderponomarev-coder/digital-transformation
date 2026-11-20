@@ -39,3 +39,5 @@ location.reload()
 |-------|------|------------|
 | PATCH | `/api/documents/{id}/acl` | смена `acl_readers` / `owner_id` (только владелец) |
 | GET | `/api/documents/{id}` | документ + facts при праве чтения |
+| POST | `/api/compare/alternatives` | AS-IS / rules / agent+HITL (P3) |
+| GET | `/api/audit/runs` | журнал запусков; `tools_invoked` (P3 / TC-07) |

@@ -31,7 +31,14 @@ make test
 
 ```bash
 # Без Docker (systemd + nginx) — основной вариант
+git clone <repo-url> /opt/stratum-src
+cd /opt/stratum-src
 sudo bash deploy/debian/install.sh
+
+# Автообновление с GitHub (timer каждые ~5 мин)
+sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh
+# + webhook на push:
+sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh --webhook
 
 # С Docker
 sudo bash deploy/debian/install-docker.sh

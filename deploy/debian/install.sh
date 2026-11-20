@@ -60,6 +60,16 @@ chown -R www-data:www-data "${WEB_ROOT}"
 if [[ ! -f "${ENV_DIR}/stratum.env" ]]; then
   install -m 640 "${APP_ROOT}/deploy/debian/stratum.env.example" "${ENV_DIR}/stratum.env"
 fi
+# запоминаем git-клон для автообновления
+if [[ -d "${REPO_DIR}/.git" ]]; then
+  if ! grep -q '^STRATUM_GIT_DIR=' "${ENV_DIR}/stratum.env"; then
+    echo "STRATUM_GIT_DIR=${REPO_DIR}" >>"${ENV_DIR}/stratum.env"
+  else
+    sed -i "s|^STRATUM_GIT_DIR=.*|STRATUM_GIT_DIR=${REPO_DIR}|" "${ENV_DIR}/stratum.env"
+  fi
+  grep -q '^STRATUM_GIT_BRANCH=' "${ENV_DIR}/stratum.env" || echo "STRATUM_GIT_BRANCH=main" >>"${ENV_DIR}/stratum.env"
+  grep -q '^STRATUM_GIT_REMOTE=' "${ENV_DIR}/stratum.env" || echo "STRATUM_GIT_REMOTE=origin" >>"${ENV_DIR}/stratum.env"
+fi
 chown root:stratum "${ENV_DIR}/stratum.env"
 
 # nginx site (optional non-80 port via listen directive rewrite)
@@ -89,6 +99,11 @@ if [[ "${HAS_SYSTEMD}" -eq 1 ]]; then
   nginx -t
   systemctl enable nginx
   systemctl reload nginx || systemctl restart nginx
+
+  if [[ "${STRATUM_AUTO_UPDATE:-0}" == "1" && -d "${REPO_DIR}/.git" ]]; then
+    echo "== автообновление с GitHub =="
+    bash "${APP_ROOT}/deploy/debian/enable-auto-update.sh" || true
+  fi
 else
   echo "== systemd недоступен: API поднимается через helper (foreground/tmux) =="
   echo "   Используйте: sudo bash ${APP_ROOT}/deploy/debian/run-native.sh"
@@ -103,6 +118,9 @@ echo "  Код: ${APP_ROOT}"
 echo "  Env: ${ENV_DIR}/stratum.env"
 if [[ "${HAS_SYSTEMD}" -eq 1 ]]; then
   echo "  status: systemctl status stratum-api nginx"
+  echo "  auto:   sudo bash ${APP_ROOT}/deploy/debian/enable-auto-update.sh"
+  echo "          sudo bash ${APP_ROOT}/deploy/debian/enable-auto-update.sh --webhook"
 else
   echo "  start:  sudo bash ${APP_ROOT}/deploy/debian/run-native.sh"
 fi
+

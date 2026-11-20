@@ -1,4 +1,4 @@
-.PHONY: api web test install smoke build docker-up docker-down native-install native-run
+.PHONY: api web test install smoke build docker-up docker-down native-install native-run enable-auto-update
 
 install:
 	python3 -m venv .venv
@@ -25,6 +25,9 @@ native-install:
 
 native-run:
 	sudo bash deploy/debian/run-native.sh 8080
+
+enable-auto-update:
+	sudo bash deploy/debian/enable-auto-update.sh
 
 docker-up:
 	docker compose up -d --build

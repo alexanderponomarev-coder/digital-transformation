@@ -1,0 +1,19 @@
+[Unit]
+Description=STRATUM GitHub webhook (auto-update)
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/stratum/stratum.env
+Environment=STRATUM_WEBHOOK_HOST=127.0.0.1
+Environment=STRATUM_WEBHOOK_PORT=9000
+Environment=STRATUM_AUTO_UPDATE_SCRIPT=/opt/stratum/deploy/debian/auto-update.sh
+ExecStart=/usr/bin/python3 /opt/stratum/deploy/debian/webhook-server.py
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

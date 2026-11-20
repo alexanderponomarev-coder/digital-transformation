@@ -1,0 +1,15 @@
+[Unit]
+Description=Timer: STRATUM auto-update from GitHub
+Documentation=file:///opt/stratum/docs/DEPLOY_DEBIAN.md
+
+[Timer]
+# каждые 5 минут + небольшой разброс
+OnBootSec=2min
+OnUnitActiveSec=5min
+RandomizedDelaySec=30s
+AccuracySec=1min
+Persistent=true
+Unit=stratum-auto-update.service
+
+[Install]
+WantedBy=timers.target

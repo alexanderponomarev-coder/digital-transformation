@@ -46,6 +46,55 @@ sudo bash deploy/debian/update.sh
 sudo bash deploy/debian/uninstall.sh
 ```
 
+### Автообновление с GitHub
+
+Нужен git-клон (обычно `/opt/stratum-src`) с доступом на `git fetch` (deploy key / token для private repo).
+
+**1) Timer (каждые ~5 мин)**
+
+```bash
+# после install.sh
+sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh
+
+# или сразу при установке
+sudo STRATUM_AUTO_UPDATE=1 bash deploy/debian/install.sh /opt/stratum-src
+
+sudo systemctl list-timers stratum-auto-update.timer
+sudo journalctl -u stratum-auto-update -f
+sudo bash /opt/stratum/deploy/debian/auto-update.sh --force
+```
+
+**2) Webhook (мгновенно на push в `main`)**
+
+```bash
+sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh --webhook
+```
+
+В GitHub → Settings → Webhooks:
+
+| Поле | Значение |
+|------|----------|
+| Payload URL | `http://YOUR_VPS/hooks/github` |
+| Content type | `application/json` |
+| Secret | `STRATUM_WEBHOOK_SECRET` из `/etc/stratum/stratum.env` |
+| Events | Just the push event |
+
+Параметры в `/etc/stratum/stratum.env`:
+
+```bash
+STRATUM_GIT_DIR=/opt/stratum-src
+STRATUM_GIT_BRANCH=main
+STRATUM_GIT_REMOTE=origin
+STRATUM_WEBHOOK_SECRET=...
+```
+
+Для private-репозитория на VPS:
+
+```bash
+# deploy key (readonly) или
+git -C /opt/stratum-src remote set-url origin https://<TOKEN>@github.com/ORG/REPO.git
+```
+
 Другой порт (например 8080):
 
 ```bash

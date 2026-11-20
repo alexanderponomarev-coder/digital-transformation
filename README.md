@@ -25,42 +25,33 @@ make test
 
 Демо-проект: холдинг **СеверПром**.
 
-## Публикация на Debian VPS
+## Установка на VPS (полная инструкция)
 
-Подробно: [docs/DEPLOY_DEBIAN.md](docs/DEPLOY_DEBIAN.md)
+**→ [docs/INSTALL.md](docs/INSTALL.md)** — пошагово с нуля: только STRATUM или Klaris+STRATUM на одном узле, автообновление, TLS, диагностика.
+
+Кратко (только STRATUM):
 
 ```bash
-# Без Docker (systemd + nginx) — основной вариант
-git clone <repo-url> /opt/stratum-src
+sudo git clone https://github.com/alexanderponomarev-coder/digital-transformation-.git /opt/stratum-src
 cd /opt/stratum-src
-sudo bash deploy/debian/install.sh
-
-# Автообновление с GitHub (timer каждые ~5 мин)
-sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh
-# + webhook на push:
+sudo bash deploy/debian/install.sh /opt/stratum-src
 sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh --webhook
-
-# С Docker
-sudo bash deploy/debian/install-docker.sh
-
-# Один VPS с Klaris (2fromlarec): Klaris :80, STRATUM :8080
-sudo STRATUM_HTTP_PORT=8080 STRATUM_API_PORT=8001 bash deploy/debian/install.sh
+curl -fsS http://127.0.0.1/api/health
 ```
 
-После деплоя:
+Кратко (рядом с Klaris):
 
 ```bash
-curl -fsS http://YOUR_VPS_IP/api/health
-# или при cohost:
-curl -fsS http://YOUR_VPS_IP:8080/api/health
-./scripts/smoke-deploy.sh http://YOUR_VPS_IP:8080
+sudo STRATUM_HTTP_PORT=8080 STRATUM_API_PORT=8001 bash deploy/debian/install.sh /opt/stratum-src
+curl -fsS http://127.0.0.1:8080/api/health
 ```
 
 ## Документация
 
+- [Полная установка на VPS](docs/INSTALL.md)
 - [Концепция v1.1](docs/CONCEPT.md)
 - [ТЗ v1.0](docs/TZ.md)
-- [Деплой Debian](docs/DEPLOY_DEBIAN.md)
+- [Деплой Debian (справка)](docs/DEPLOY_DEBIAN.md)
 - [Cohost с Klaris](docs/COHOST_KLARIS.md)
 
 ## MVP-модули

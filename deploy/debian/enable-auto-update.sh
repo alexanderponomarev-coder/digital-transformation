@@ -35,6 +35,19 @@ grep -q '^STRATUM_GIT_BRANCH=' "${ENV_FILE}" || echo "STRATUM_GIT_BRANCH=main" >
 grep -q '^STRATUM_GIT_REMOTE=' "${ENV_FILE}" || echo "STRATUM_GIT_REMOTE=origin" >>"${ENV_FILE}"
 grep -q '^STRATUM_AUTO_UPDATE=' "${ENV_FILE}" || echo "STRATUM_AUTO_UPDATE=1" >>"${ENV_FILE}"
 
+# Private GitHub: токен в env (не в remote URL)
+HAS_TOKEN=0
+if grep -qE '^(STRATUM_GITHUB_TOKEN|GITHUB_TOKEN)=.+' "${ENV_FILE}" 2>/dev/null; then
+  HAS_TOKEN=1
+fi
+REMOTE_URL="$(git -C "${GIT_DIR}" remote get-url origin 2>/dev/null || true)"
+if [[ "${HAS_TOKEN}" -eq 0 && "${REMOTE_URL}" == https://github.com/* ]]; then
+  echo "WARNING: нет STRATUM_GITHUB_TOKEN в ${ENV_FILE}"
+  echo "  Для private repo auto-update упадёт на git fetch."
+  echo "  Добавьте:  STRATUM_GITHUB_TOKEN=ghp_xxx   (Contents: Read)"
+  echo "  Документация: docs/INSTALL.md §3"
+fi
+
 # синхронизируем скрипты в APP_ROOT на случай, если enable вызвали из src
 if [[ -d "${GIT_DIR}/deploy/debian" ]]; then
   rsync -a "${GIT_DIR}/deploy/debian/" "${APP_ROOT}/deploy/debian/"
@@ -103,3 +116,4 @@ fi
 echo
 echo "Ручной прогон: sudo bash ${APP_ROOT}/deploy/debian/auto-update.sh --force"
 echo "Логи timer:    journalctl -u stratum-auto-update -f"
+echo "Private repo:  STRATUM_GITHUB_TOKEN в ${ENV_FILE} (см. docs/INSTALL.md §3)"

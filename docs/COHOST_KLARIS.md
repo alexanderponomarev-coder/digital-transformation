@@ -42,3 +42,14 @@ curl -fsS -H 'Host: klaris.example.com' http://127.0.0.1/health
 curl -fsS http://stratum.example.com/api/health
 curl -fsS http://klaris.example.com/health
 ```
+
+## Private repo → auto-update
+
+В `/etc/stratum/stratum.env` (токен не в `git remote`):
+
+```bash
+STRATUM_GITHUB_TOKEN=ghp_xxx
+STRATUM_REPO_URL=https://github.com/alexanderponomarev-coder/digital-transformation-.git
+```
+
+У Klaris аналогично: `KLARIS_GITHUB_TOKEN` в `/etc/klaris/klaris.env`. Подробно: [INSTALL.md](INSTALL.md) §3.

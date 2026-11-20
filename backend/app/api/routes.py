@@ -8,6 +8,7 @@ from app.models.schemas import (
     AnswerQuestionRequest,
     ApprovalRequest,
     ClassifyResult,
+    ConfirmVersionRequest,
     DocumentAclRequest,
     DocumentUploadRequest,
     Opportunity,
@@ -54,12 +55,41 @@ def upload_document(
             content_hint=payload.content_hint,
             owner_id=auth.user_id,
             acl_readers=payload.acl_readers,
+            read_error=payload.read_error,
+            read_error_detail=payload.read_error_detail,
         )
         holder["result"] = result
         return updated
 
     store.mutate(mutator)
     return holder["result"]
+
+
+@router.post("/documents/{document_id}/confirm-version", response_model=PlatformSnapshot)
+def confirm_version(
+    document_id: str,
+    payload: ConfirmVersionRequest,
+    auth: AuthContext = Depends(get_auth_context),
+) -> PlatformSnapshot:
+    """Confirm active regulation version among conflicts (TC-03)."""
+    _ = payload
+
+    def mutator(snap: PlatformSnapshot) -> PlatformSnapshot:
+        doc = next((d for d in snap.documents if d.id == document_id), None)
+        if doc is None:
+            raise KeyError(f"Document {document_id} not found")
+        if doc.owner_id and doc.owner_id != auth.user_id:
+            # Seed docs have no owner — any authenticated/lab user may confirm
+            raise PermissionError("Только владелец может подтвердить версию")
+        return engine.confirm_document_version(snap, document_id)
+
+    try:
+        updated = store.mutate(mutator)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    return filter_snapshot_for_user(updated, auth.user_id)
 
 
 @router.patch("/documents/{document_id}/acl", response_model=PlatformSnapshot)

@@ -57,6 +57,12 @@ class Fact(BaseModel):
     layers: list[LayerId]
     source: SourceRef
     confidence: Confidence = Confidence.MEDIUM
+    # P1 / TC-02: do not mix regulation with practice
+    evidence_kind: Literal["norm", "observed", "unknown"] = "unknown"
+    period: str | None = None
+    sample_size: int | None = None
+    metric_value: str | None = None
+    metric_unit: str | None = None
 
 
 class DocumentRecord(BaseModel):
@@ -70,7 +76,11 @@ class DocumentRecord(BaseModel):
     freshness_days: int = 0
     size_label: str = ""
     summary: str = ""
-    status: Literal["processing", "classified", "ready"] = "ready"
+    status: Literal["processing", "classified", "ready", "partial", "failed"] = "ready"
+    # P1 / TC-03: active vs conflict — never auto-pick «действующая» by upload date
+    version_status: Literal["active", "superseded", "conflict"] = "active"
+    conflict_with_ids: list[str] = Field(default_factory=list)
+    ingest_error: str | None = None
     # ACL: empty acl_readers = readable by all callers; else owner + listed users
     owner_id: str | None = None
     acl_readers: list[str] = Field(default_factory=list)
@@ -220,11 +230,20 @@ class DocumentUploadRequest(BaseModel):
     content_hint: str = ""
     # If non-empty, document is restricted to owner + these user ids
     acl_readers: list[str] = Field(default_factory=list)
+    # Simulate / report unreadable source (TC-08)
+    read_error: bool = False
+    read_error_detail: str = ""
 
 
 class DocumentAclRequest(BaseModel):
     acl_readers: list[str]
     owner_id: str | None = None
+
+
+class ConfirmVersionRequest(BaseModel):
+    """Owner confirms which conflicting version is the active regulation."""
+
+    note: str = ""
 
 
 class AnswerQuestionRequest(BaseModel):

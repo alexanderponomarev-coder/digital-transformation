@@ -17,6 +17,11 @@ export interface Fact {
   layers: LayerId[]
   source: SourceRef
   confidence: Confidence
+  evidence_kind?: 'norm' | 'observed' | 'unknown'
+  period?: string | null
+  sample_size?: number | null
+  metric_value?: string | null
+  metric_unit?: string | null
 }
 
 export interface DocumentRecord {
@@ -31,6 +36,9 @@ export interface DocumentRecord {
   size_label: string
   summary: string
   status: string
+  version_status?: 'active' | 'superseded' | 'conflict'
+  conflict_with_ids?: string[]
+  ingest_error?: string | null
   owner_id?: string | null
   acl_readers?: string[]
 }

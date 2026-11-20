@@ -29,54 +29,116 @@ def classify_document(
     format_value: str,
     summary: str = "",
     content_hint: str = "",
+    *,
+    read_error: bool = False,
+    read_error_detail: str = "",
 ) -> ClassifyResult:
     """Deterministic classifier: keyword → methodology layers + extracted facts.
 
     MVP stand-in for LLM extraction. Never invents beyond provided text —
     unknown layers become clarifying-question candidates via coverage recalc.
     """
+    doc_id = _uid("doc")
+    uploaded = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    # TC-08: unreadable / corrupt source — record gap, do not claim full coverage
+    if read_error or (
+        not (summary or content_hint).strip()
+        and format_value in {"pdf", "docx", "xlsx", "pptx"}
+        and title.lower().startswith("corrupt")
+    ):
+        detail = read_error_detail or "Источник недоступен или повреждён — текст не извлечён."
+        document = DocumentRecord(
+            id=doc_id,
+            title=title,
+            format=format_value,  # type: ignore[arg-type]
+            uploaded_at=uploaded,
+            version=1,
+            layers=[],
+            freshness_days=0,
+            size_label="ошибка чтения",
+            summary="",
+            status="failed",
+            version_status="active",
+            ingest_error=detail,
+        )
+        return ClassifyResult(
+            document=document,
+            facts=[],
+            layers=[],
+            message=(
+                "Охват неполный: документ не прочитан. "
+                f"{detail} Повтор после восстановления не должен дублировать факты без новой версии."
+            ),
+        )
+
     blob = f"{title} {summary} {content_hint}".lower()
     matched: list[LayerId] = []
     for layer_id, keywords in LAYER_KEYWORDS.items():
         if any(k in blob for k in keywords):
             matched.append(layer_id)
+
+    text = (summary or content_hint or "").strip()
+    partial = bool(matched) and not text
+    if not matched and not text:
+        # Empty payload without explicit read_error → partial unknown
+        document = DocumentRecord(
+            id=doc_id,
+            title=title,
+            format=format_value,  # type: ignore[arg-type]
+            uploaded_at=uploaded,
+            version=1,
+            layers=[],
+            freshness_days=0,
+            size_label="загрузка",
+            summary="",
+            status="partial",
+            ingest_error="Нет извлечённого текста — классификация и факты ограничены.",
+        )
+        return ClassifyResult(
+            document=document,
+            facts=[],
+            layers=[],
+            message="Частичная обработка: нет текста для извлечения. Полный охват не заявлен.",
+        )
+
     if not matched:
-        # Default soft assignment to strategy when nothing matches — still partial.
         matched = [LayerId.STRATEGY]
 
-    doc_id = _uid("doc")
+    status = "partial" if partial else "ready"
     document = DocumentRecord(
         id=doc_id,
         title=title,
         format=format_value,  # type: ignore[arg-type]
-        uploaded_at=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        uploaded_at=uploaded,
         version=1,
         layers=matched,
         freshness_days=0,
         size_label="загрузка",
         summary=summary or content_hint or "Документ загружен пользователем.",
-        status="ready",
+        status=status,  # type: ignore[arg-type]
+        ingest_error="Мало текста для уверенного извлечения." if partial else None,
     )
 
     facts: list[Fact] = []
-    # Extract lightweight facts from non-empty provided text only.
-    for layer_id in matched:
-        layer = next(l for l in LAYERS if l.id == layer_id)
-        snippet = summary or content_hint or title
-        facts.append(
-            Fact(
-                id=_uid("fact"),
-                text=f"[{layer.short_title}] Извлечено из документа: {snippet[:220]}",
-                entity_type="other",
-                layers=[layer_id],
-                source=SourceRef(
-                    document_id=doc_id,
-                    document_title=title,
-                    fragment=(summary or content_hint or title)[:160],
-                ),
-                confidence=Confidence.MEDIUM if (summary or content_hint) else Confidence.LOW,
+    if text:
+        for layer_id in matched:
+            layer = next(l for l in LAYERS if l.id == layer_id)
+            facts.append(
+                Fact(
+                    id=_uid("fact"),
+                    text=f"[{layer.short_title}] Извлечено из документа: {text[:220]}",
+                    entity_type="other",
+                    layers=[layer_id],
+                    source=SourceRef(
+                        document_id=doc_id,
+                        document_title=title,
+                        fragment=text[:160],
+                    ),
+                    confidence=Confidence.MEDIUM if len(text) > 40 else Confidence.LOW,
+                    evidence_kind="unknown",
+                )
             )
-        )
 
     return ClassifyResult(
         document=document,
@@ -84,7 +146,11 @@ def classify_document(
         layers=matched,
         message=(
             f"Документ отнесён к слоям: {', '.join(l.value for l in matched)}. "
-            "Выводы по слою появятся только при покрытии выше порога."
+            + (
+                "Статус partial — полный охват не заявлен."
+                if status == "partial"
+                else "Выводы по слою появятся только при покрытии выше порога."
+            )
         ),
     )
 
@@ -92,12 +158,26 @@ def classify_document(
 def recompute_coverage(snapshot: PlatformSnapshot) -> list[LayerCoverage]:
     threshold = snapshot.overview.coverage_threshold or COVERAGE_THRESHOLD_DEFAULT
     docs_by_layer: dict[LayerId, list[str]] = {layer.id: [] for layer in LAYERS}
+    failed_or_conflict = 0
     for doc in snapshot.documents:
+        if doc.status == "failed":
+            failed_or_conflict += 1
+            continue  # do not count failed reads toward coverage
+        if doc.version_status == "conflict":
+            failed_or_conflict += 1
+        if doc.version_status == "superseded":
+            continue
         for layer_id in doc.layers:
             docs_by_layer[layer_id].append(doc.id)
 
     facts_by_layer: dict[LayerId, int] = {layer.id: 0 for layer in LAYERS}
     for fact in snapshot.facts:
+        # Skip facts from failed / superseded docs
+        src = next((d for d in snapshot.documents if d.id == fact.source.document_id), None)
+        if src is not None and (
+            src.status == "failed" or src.version_status == "superseded"
+        ):
+            continue
         for layer_id in fact.layers:
             facts_by_layer[layer_id] += 1
 
@@ -110,13 +190,14 @@ def recompute_coverage(snapshot: PlatformSnapshot) -> list[LayerCoverage]:
     for layer in LAYERS:
         doc_ids = docs_by_layer[layer.id]
         fact_count = facts_by_layer[layer.id]
-        # Score: documents weight + facts weight − open questions penalty
+        # Score: documents weight + facts weight − open questions / ingest gaps
         doc_score = min(1.0, len(doc_ids) / 2.0) * 0.55
         fact_score = min(1.0, fact_count / 3.0) * 0.45
         penalty = min(0.35, len(open_q_by_layer[layer.id]) * 0.08)
-        score = round(max(0.0, doc_score + fact_score - penalty), 2)
+        gap_penalty = min(0.2, failed_or_conflict * 0.05)
+        score = round(max(0.0, doc_score + fact_score - penalty - gap_penalty), 2)
 
-        if score >= 0.75 and not open_q_by_layer[layer.id]:
+        if score >= 0.75 and not open_q_by_layer[layer.id] and failed_or_conflict == 0:
             status = CoverageStatus.CLOSED
         elif score >= threshold:
             status = CoverageStatus.PARTIAL
@@ -125,8 +206,10 @@ def recompute_coverage(snapshot: PlatformSnapshot) -> list[LayerCoverage]:
 
         # Preserve known blind zones from previous coverage when possible
         prev = next((c for c in snapshot.coverage if c.layer_id == layer.id), None)
-        blind_zones = prev.blind_zones if prev else []
-        if open_q_by_layer[layer.id] and not blind_zones:
+        blind_zones = list(prev.blind_zones) if prev else []
+        if open_q_by_layer[layer.id] and not any(
+            z.question_ids for z in blind_zones
+        ):
             blind_zones = [
                 BlindZone(
                     id=_uid("bz"),
@@ -135,6 +218,24 @@ def recompute_coverage(snapshot: PlatformSnapshot) -> list[LayerCoverage]:
                     question_ids=open_q_by_layer[layer.id],
                 )
             ]
+        if failed_or_conflict and layer.id == LayerId.PROCESSES:
+            if not any(z.id.startswith("bz-ingest") or "непрочит" in z.title.lower() or "конфликт" in z.title.lower() for z in blind_zones):
+                blind_zones.append(
+                    BlindZone(
+                        id=_uid("bz-ingest"),
+                        title="Пропуски чтения или конфликт версий",
+                        reason="Есть failed/conflict документы — полный охват не заявлен.",
+                        question_ids=[],
+                    )
+                )
+
+        has_conflict = any(
+            d.version_status == "conflict"
+            and (not d.layers or layer.id in d.layers)
+            for d in snapshot.documents
+        )
+        # Failed reads lower score via gap_penalty; block infer only on version conflict
+        can_infer = score >= threshold and layer.mvp and not has_conflict
 
         result.append(
             LayerCoverage(
@@ -144,7 +245,7 @@ def recompute_coverage(snapshot: PlatformSnapshot) -> list[LayerCoverage]:
                 threshold=threshold,
                 document_ids=doc_ids,
                 blind_zones=blind_zones,
-                can_infer=score >= threshold and layer.mvp,
+                can_infer=can_infer,
             )
         )
     return result
@@ -179,33 +280,102 @@ def ingest_document(
     *,
     owner_id: str | None = None,
     acl_readers: list[str] | None = None,
+    read_error: bool = False,
+    read_error_detail: str = "",
 ) -> tuple[PlatformSnapshot, ClassifyResult]:
-    classified = classify_document(title, format_value, summary, content_hint)
-
-    # Versioning: same title → bump version, keep history via replaces_id
-    existing = next(
-        (d for d in snapshot.documents if d.title.lower() == title.lower()),
-        None,
+    classified = classify_document(
+        title,
+        format_value,
+        summary,
+        content_hint,
+        read_error=read_error,
+        read_error_detail=read_error_detail,
     )
+
+    same_title = [
+        d for d in snapshot.documents if d.title.lower() == title.lower()
+    ]
+    # Prefer bumping from highest version among same title
+    existing = max(same_title, key=lambda d: d.version, default=None)
     document = classified.document
-    acl_updates: dict = {
+    updates: dict = {
         "owner_id": owner_id,
         "acl_readers": list(acl_readers or []),
     }
     if existing:
-        acl_updates.update(
+        updates.update(
             {
                 "version": existing.version + 1,
                 "replaces_id": existing.id,
             }
         )
-    document = document.model_copy(update=acl_updates)
+        # TC-03: do not auto-select active edition by upload — mark conflict
+        peer_ids = [d.id for d in same_title if d.version_status != "superseded"]
+        updates["version_status"] = "conflict"
+        updates["conflict_with_ids"] = peer_ids
+    document = document.model_copy(update=updates)
 
-    docs = [document, *snapshot.documents]
+    docs: list[DocumentRecord] = []
+    if existing:
+        for d in snapshot.documents:
+            if d.title.lower() == title.lower() and d.version_status != "superseded":
+                peers = [document.id] + [
+                    x.id
+                    for x in same_title
+                    if x.id != d.id and x.version_status != "superseded"
+                ]
+                docs.append(
+                    d.model_copy(
+                        update={
+                            "version_status": "conflict",
+                            "conflict_with_ids": peers,
+                        }
+                    )
+                )
+            else:
+                docs.append(d)
+        docs = [document, *docs]
+        msg = (
+            classified.message
+            + " Конфликт версий: действующая редакция не выбрана — подтвердите владельцем."
+        )
+        classified = classified.model_copy(update={"message": msg})
+    else:
+        docs = [document, *snapshot.documents]
+
     facts = [*classified.facts, *snapshot.facts]
     updated = snapshot.model_copy(update={"documents": docs, "facts": facts})
     updated = refresh_overview(updated)
     return updated, classified.model_copy(update={"document": document})
+
+
+def confirm_document_version(
+    snapshot: PlatformSnapshot, document_id: str
+) -> PlatformSnapshot:
+    """Owner confirms active version; peers with same title → superseded (TC-03)."""
+    target = next((d for d in snapshot.documents if d.id == document_id), None)
+    if target is None:
+        raise KeyError(f"Document {document_id} not found")
+    docs: list[DocumentRecord] = []
+    for d in snapshot.documents:
+        if d.id == document_id:
+            docs.append(
+                d.model_copy(
+                    update={"version_status": "active", "conflict_with_ids": []}
+                )
+            )
+        elif d.title.lower() == target.title.lower():
+            docs.append(
+                d.model_copy(
+                    update={
+                        "version_status": "superseded",
+                        "conflict_with_ids": [],
+                    }
+                )
+            )
+        else:
+            docs.append(d)
+    return refresh_overview(snapshot.model_copy(update={"documents": docs}))
 
 
 def answer_question(
@@ -291,12 +461,21 @@ def as_is_summary(snapshot: PlatformSnapshot) -> dict:
         for i in snapshot.insights
         if i.kind == "finding" and i.layer_id in inferable
     ]
+    norm_facts = [f.model_dump() for f in snapshot.facts if f.evidence_kind == "norm"]
+    observed_facts = [
+        f.model_dump() for f in snapshot.facts if f.evidence_kind == "observed"
+    ]
     return {
         "company": snapshot.overview.company_name,
         "layers_ready": [lid.value for lid in inferable],
         "findings": [i.model_dump() for i in findings],
         "facts_count": len(snapshot.facts),
-        "rule": "Выводы только по слоям с покрытием ≥ порога; иначе — только вопросы.",
+        "norm_facts": norm_facts,
+        "observed_facts": observed_facts,
+        "rule": (
+            "Выводы только по слоям с покрытием ≥ порога и без конфликта версий. "
+            "Норматив (evidence_kind=norm) и наблюдение (observed) не смешиваются."
+        ),
     }
 
 

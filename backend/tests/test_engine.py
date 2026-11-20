@@ -57,7 +57,10 @@ def test_ingest_versions_same_title():
     )
     assert second.document.version == first.document.version + 1
     assert second.document.replaces_id == first.document.id
+    assert second.document.version_status == "conflict"
     assert updated2.documents[0].title == "Новый отчёт по данным"
+    first_in_store = next(d for d in updated2.documents if d.id == first.document.id)
+    assert first_in_store.version_status == "conflict"
 
 
 def test_answer_becomes_fact_and_insight():

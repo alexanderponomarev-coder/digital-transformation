@@ -41,7 +41,18 @@ if [[ -f /etc/nginx/sites-enabled/klaris || -d /opt/klaris ]]; then
   API_PORT="${STRATUM_API_PORT:-8001}"
 fi
 
-if [[ -f "${APP_ROOT}/deploy/debian/nginx-stratum.conf" ]]; then
+# Re-render nginx; if LE cert for SERVER_NAME exists, keep :443 (do NOT wipe TLS → Klaris).
+RENDER="${APP_ROOT}/deploy/debian/render_stratum_nginx.py"
+if [[ -f "${RENDER}" ]]; then
+  python3 "${RENDER}" \
+    --output /etc/nginx/sites-available/stratum \
+    --server-name "${SERVER_NAME}" \
+    --http-port "${HTTP_PORT}" \
+    --api-port "${API_PORT}" \
+    --default-server "${DEFAULT_SERVER}"
+  ln -sfn /etc/nginx/sites-available/stratum /etc/nginx/sites-enabled/stratum
+elif [[ -f "${APP_ROOT}/deploy/debian/nginx-stratum.conf" ]]; then
+  echo "WARN: render_stratum_nginx.py missing — falling back to HTTP-only template" >&2
   python3 - <<PY
 from pathlib import Path
 src = Path("${APP_ROOT}/deploy/debian/nginx-stratum.conf").read_text()

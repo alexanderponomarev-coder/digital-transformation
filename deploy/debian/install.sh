@@ -136,19 +136,13 @@ chown root:stratum "${ENV_DIR}/stratum.env"
 
 chmod +x "${APP_ROOT}/deploy/debian/"*.sh
 
-# nginx site from template placeholders
-NGINX_CONF="${APP_ROOT}/deploy/debian/nginx-stratum.conf"
-# DEFAULT_SERVER may contain a leading space — escape for sed carefully via envsubst-like replace
-python3 - <<PY
-from pathlib import Path
-src = Path("${NGINX_CONF}").read_text()
-src = src.replace("__STRATUM_HTTP_PORT__", "${HTTP_PORT}")
-src = src.replace("__STRATUM_API_PORT__", "${API_PORT}")
-src = src.replace("__STRATUM_SERVER_NAME__", "${SERVER_NAME}")
-src = src.replace("__STRATUM_DEFAULT_SERVER__", """${DEFAULT_SERVER}""")
-Path("/tmp/stratum-nginx.conf").write_text(src)
-PY
-install -m 644 /tmp/stratum-nginx.conf /etc/nginx/sites-available/stratum
+# nginx site (preserves LE :443 if cert already exists — cohost with Klaris)
+python3 "${APP_ROOT}/deploy/debian/render_stratum_nginx.py" \
+  --output /etc/nginx/sites-available/stratum \
+  --server-name "${SERVER_NAME}" \
+  --http-port "${HTTP_PORT}" \
+  --api-port "${API_PORT}" \
+  --default-server "${DEFAULT_SERVER}"
 ln -sfn /etc/nginx/sites-available/stratum /etc/nginx/sites-enabled/stratum
 # не трогаем sites-enabled/klaris
 rm -f /etc/nginx/sites-enabled/default

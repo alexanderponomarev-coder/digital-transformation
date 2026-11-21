@@ -3,11 +3,11 @@ Description=Timer: STRATUM auto-update from GitHub
 Documentation=file:///opt/stratum/docs/DEPLOY_DEBIAN.md
 
 [Timer]
-# каждые 5 минут + небольшой разброс
-OnBootSec=2min
-OnUnitActiveSec=5min
-RandomizedDelaySec=30s
-AccuracySec=1min
+# polling origin/main каждые ~2 минуты
+OnBootSec=1min
+OnUnitActiveSec=2min
+RandomizedDelaySec=20s
+AccuracySec=30s
 Persistent=true
 Unit=stratum-auto-update.service
 

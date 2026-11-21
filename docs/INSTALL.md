@@ -331,12 +331,14 @@ sudo git -C /opt/stratum-src fetch origin
 - Не коммитьте `stratum.env` / токен в репозиторий.
 - Не давайте токену права шире **Contents: Read**, если достаточно auto-update.
 
-### 3.4. Timer (~каждые 5 минут)
+### 3.4. Автообновление при изменении `main` (timer ~2 мин)
+
+Полный runbook: [AUTO_UPDATE.md](AUTO_UPDATE.md).
 
 ```bash
+# polling origin/main каждые ~2 минуты (без webhook)
 sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh
-sudo systemctl list-timers stratum-auto-update.timer --no-pager
-sudo journalctl -u stratum-auto-update -n 50 --no-pager
+sudo bash /opt/stratum/deploy/debian/auto-update-status.sh
 ```
 
 Ручной прогон:
@@ -347,30 +349,15 @@ sudo bash /opt/stratum/deploy/debian/auto-update.sh --force
 
 Если в логе `hint: private repo — добавьте STRATUM_GITHUB_TOKEN` — вернитесь к §3.1.
 
-### 3.5. Webhook (мгновенно на push в `main`)
+### 3.5. GitHub Webhook (опционально)
 
-Работает и для private: GitHub шлёт событие на ваш URL; на сервере обновление всё равно идёт через `git fetch` с токеном/ключом из §3.1–3.2.
+Не требуется для обычного стенда. Если нужен мгновенный deploy на push:
 
 ```bash
 sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh --webhook
 ```
 
-В GitHub → **Settings → Webhooks → Add webhook**:
-
-| Поле | Только STRATUM | Cohost (по домену) |
-|------|----------------|---------------------|
-| Payload URL | `http://IP/hooks/github` | `https://stratum.example.com/hooks/github` |
-| Content type | `application/json` | то же |
-| Secret | `STRATUM_WEBHOOK_SECRET` из `/etc/stratum/stratum.env` | то же |
-| Events | Just the **push** event | то же |
-
-Проверка:
-
-```bash
-curl -fsS http://127.0.0.1:9000/health \
-  || curl -fsS -H 'Host: stratum.example.com' http://127.0.0.1/hooks/github/health
-sudo systemctl status stratum-webhook --no-pager
-```
+Payload URL: `https://<STRATUM_SERVER_NAME>/hooks/github`, Secret из `stratum.env`, Events: push.
 
 ### 3.6. Чеклист private auto-update
 

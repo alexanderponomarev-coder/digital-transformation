@@ -22,9 +22,10 @@ def test_snapshot():
     res = client.get("/api/snapshot")
     assert res.status_code == 200
     data = res.json()
-    assert data["overview"]["company_name"] == "СеверПром"
+    assert "СеверПром" in data["overview"]["company_name"]
+    assert data["overview"]["is_demo"] is True
     assert len(data["layers"]) == 5
-    assert len(data["documents"]) >= 5
+    assert len(data["documents"]) >= 20
 
 
 def test_upload_and_coverage_change():

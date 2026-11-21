@@ -175,6 +175,8 @@ export interface ProjectOverview {
   deploy_mode?: 'lab' | 'demo'
   persistence?: 'in_memory'
   storage_disclaimer?: string
+  is_demo?: boolean
+  demo_label?: string
 }
 
 export type MaturityDomainId =

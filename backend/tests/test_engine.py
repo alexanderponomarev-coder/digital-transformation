@@ -9,8 +9,14 @@ from app.services.regulatory import is_admissible, screen_opportunity
 def test_seed_snapshot_has_five_layers():
     snap = build_snapshot()
     assert len(snap.layers) == 5
-    assert snap.overview.company_name == "СеверПром"
+    assert "СеверПром" in snap.overview.company_name
+    assert snap.overview.is_demo is True
+    assert "демо" in snap.overview.version.lower() or "Демо" in snap.overview.version
     assert snap.overview.open_questions_count >= 1
+    assert len(snap.documents) >= 20
+    assert len(snap.facts) >= 25
+    assert len(snap.insights) >= 8
+    assert len(snap.opportunities) >= 6
 
 
 def test_classify_maps_process_document():

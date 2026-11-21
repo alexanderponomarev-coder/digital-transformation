@@ -10,6 +10,12 @@ export function OverviewPage() {
 
   return (
     <div className="space-y-6">
+      <section className="rounded-xl border border-ember-500/25 bg-ember-100/50 px-4 py-3 text-sm text-ink-800">
+        <span className="font-semibold text-ember-600">Демо-версия.</span> Корпус «
+        {overview.company_name}» — синтетика для полного цикла (документы → факты →
+        покрытие → вопросы → инсайты → ROI → compare → аудит → зрелость). Не для
+        реальных решений.
+      </section>
       <section className="grid gap-4 md:grid-cols-4">
         {[
           { label: 'Покрытие', value: pct(overview.overall_coverage) },

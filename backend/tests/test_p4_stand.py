@@ -18,6 +18,9 @@ def test_health_exposes_stand_meta() -> None:
     body = client.get("/api/health").json()
     assert body["status"] == "ok"
     assert body["product"] == "STRATUM"
+    assert body["demo"] is True
+    assert body["edition"] == "demo"
+    assert "демо" in body["demo_label"].lower()
     assert body["deploy_mode"] in {"lab", "demo"}
     assert body["persistence"] == "in_memory"
     assert body["disclaimer"]
@@ -31,7 +34,9 @@ def test_snapshot_overview_annotated() -> None:
     ov = client.get("/api/snapshot").json()["overview"]
     assert ov["deploy_mode"] == settings.deploy_mode
     assert ov["persistence"] == "in_memory"
-    assert ov["storage_disclaimer"] == STORAGE_DISCLAIMER
+    assert ov["is_demo"] is True
+    assert STORAGE_DISCLAIMER in ov["storage_disclaimer"]
+    assert "демо" in ov["storage_disclaimer"].lower() or "ДЕМО" in ov["storage_disclaimer"]
 
 
 def test_deploy_mode_demo_via_settings(monkeypatch) -> None:

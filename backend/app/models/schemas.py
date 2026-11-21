@@ -245,6 +245,9 @@ class ProjectOverview(BaseModel):
     deploy_mode: Literal["lab", "demo"] = "lab"
     persistence: Literal["in_memory"] = "in_memory"
     storage_disclaimer: str = ""
+    # Demo corpus flag (synthetic СеверПром)
+    is_demo: bool = True
+    demo_label: str = "Демо-версия · синтетические данные"
 
 
 class AuditEvent(BaseModel):

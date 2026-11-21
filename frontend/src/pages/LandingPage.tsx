@@ -84,7 +84,7 @@ export function LandingPage() {
             to="/app"
             className="text-sm font-semibold text-white/80 transition hover:text-white"
           >
-            Платформа
+            Демо
           </Link>
         </header>
 
@@ -99,6 +99,9 @@ export function LandingPage() {
             Платформа для CDO и руководства: оценка зрелости по четырём областям
             показывает слабое звено и допустимый режим работы — до масштабирования
             ИИ-агентов на процессы.
+          </p>
+          <p className="animate-rise mt-3 text-sm font-medium tracking-wide text-ember-500 [animation-delay:160ms]">
+            Демо-версия · синтетический холдинг «СеверПром»
           </p>
           <div className="animate-rise mt-9 flex flex-wrap items-center gap-3 [animation-delay:200ms]">
             <Link
@@ -224,7 +227,7 @@ export function LandingPage() {
               to="/app"
               className="inline-flex items-center gap-2 border border-white/25 px-6 py-3.5 text-sm font-semibold text-white transition hover:border-white/40"
             >
-              Смотреть платформу
+              Открыть демо-платформу
             </Link>
           </div>
         </div>

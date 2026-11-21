@@ -10,6 +10,7 @@ import { QuestionsPage } from './pages/QuestionsPage'
 import { ModelPage } from './pages/ModelPage'
 import { RoadmapPage } from './pages/RoadmapPage'
 import { RegulatoryPage } from './pages/RegulatoryPage'
+import { MaturityPage } from './pages/MaturityPage'
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="documents" element={<DocumentsPage />} />
           <Route path="coverage" element={<CoveragePage />} />
           <Route path="methodology" element={<MethodologyPage />} />
+          <Route path="maturity" element={<MaturityPage />} />
           <Route path="questions" element={<QuestionsPage />} />
           <Route path="model" element={<ModelPage />} />
           <Route path="roadmap" element={<RoadmapPage />} />

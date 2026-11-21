@@ -177,6 +177,60 @@ export interface ProjectOverview {
   storage_disclaimer?: string
 }
 
+export type MaturityDomainId =
+  | 'infrastructure'
+  | 'governance'
+  | 'agents'
+  | 'organization'
+export type MaturityAspectId = 'technology' | 'accountability' | 'rules'
+
+export interface MaturityScore {
+  domain_id: MaturityDomainId
+  aspect_id: MaturityAspectId
+  level: number
+}
+
+export interface MaturityDomainResult {
+  domain_id: MaturityDomainId
+  title: string
+  scores: Record<string, number>
+  domain_level: number
+  weakest_aspect: MaturityAspectId
+}
+
+export interface MaturityAssessment {
+  scores: MaturityScore[]
+  domain_results: MaturityDomainResult[]
+  system_level: number
+  max_operating_mode: number
+  mode_label: string
+  next_step: string
+  profile_summary: string
+  notes?: string
+}
+
+export interface MaturityCell {
+  domain_id: MaturityDomainId
+  aspect_id: MaturityAspectId
+  level: number
+  description: string
+}
+
+export interface MaturityMatrix {
+  title: string
+  rule: string
+  domains: {
+    id: MaturityDomainId
+    title: string
+    capabilities: string
+    focus: string
+    order: number
+  }[]
+  aspects: { id: MaturityAspectId; title: string; description: string }[]
+  levels: { level: number; title: string; description: string }[]
+  cells: MaturityCell[]
+}
+
 export interface PlatformSnapshot {
   overview: ProjectOverview
   layers: MethodologyLayer[]
@@ -195,6 +249,7 @@ export interface PlatformSnapshot {
     hallucination_rate: number
     coverage_completeness: number
   }
+  maturity?: MaturityAssessment | null
 }
 
 export interface AuditEvent {

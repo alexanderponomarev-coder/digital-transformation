@@ -2,6 +2,9 @@ import type {
   AuditEvent,
   ClassifyResult,
   ComparisonResponse,
+  MaturityAssessment,
+  MaturityMatrix,
+  MaturityScore,
   Opportunity,
   PlatformSnapshot,
   RoiModel,
@@ -107,5 +110,12 @@ export const api = {
     }),
   auditRuns: (limit = 100) =>
     request<AuditEvent[]>(`/audit/runs?limit=${limit}`),
+  maturityMatrix: () => request<MaturityMatrix>('/maturity/matrix'),
+  maturity: () => request<MaturityAssessment>('/maturity'),
+  updateMaturityScores: (scores: MaturityScore[]) =>
+    request<PlatformSnapshot>('/maturity/scores', {
+      method: 'PUT',
+      body: JSON.stringify({ scores }),
+    }),
   reset: () => request<PlatformSnapshot>('/reset', { method: 'POST' }),
 }

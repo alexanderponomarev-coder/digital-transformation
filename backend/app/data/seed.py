@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from app.core.methodology import COVERAGE_THRESHOLD_DEFAULT, LAYERS
+
 from app.models.schemas import (
     ApprovalStatus,
     BlindZone,
@@ -710,6 +711,8 @@ def build_snapshot() -> PlatformSnapshot:
         ),
     ]
 
+    from app.services.maturity import seed_severprom_maturity
+
     overall = sum(c.score for c in coverage) / len(coverage)
 
     overview = ProjectOverview(
@@ -746,6 +749,7 @@ def build_snapshot() -> PlatformSnapshot:
             hallucination_rate=0.04,
             coverage_completeness=overall,
         ),
+        maturity=seed_severprom_maturity(),
     )
 
 

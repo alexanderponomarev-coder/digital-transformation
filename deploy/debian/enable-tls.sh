@@ -71,9 +71,18 @@ fi
 echo "==> certbot ${CERTBOT_ARGS[*]}"
 certbot "${CERTBOT_ARGS[@]}"
 
+# Certbot may rewrite server blocks — restore /hooks/github for auto-update webhook
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f /etc/nginx/sites-available/stratum && -f "${SCRIPT_DIR}/patch-webhook-nginx.py" ]]; then
+  echo "==> Ensure /hooks/github in nginx (HTTP+SSL)"
+  python3 "${SCRIPT_DIR}/patch-webhook-nginx.py" /etc/nginx/sites-available/stratum || true
+  nginx -t && systemctl reload nginx
+fi
+
 echo "==> Verify HTTPS"
 curl -fsS "https://${DOMAIN}/api/health" | head -c 300
 echo
 echo "OK: https://${DOMAIN} — if browser still warns, wait for DNS/CDN or check cohost Klaris cert on :443."
 echo "    Renew: certbot renew --dry-run"
 echo "    Cohost: run this script once per domain (Klaris and STRATUM separately)."
+echo "    Webhook: https://${DOMAIN}/hooks/github  (enable: bash …/enable-auto-update.sh)"

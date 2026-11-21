@@ -1,11 +1,27 @@
 #!/usr/bin/env bash
-# Включает автообновление с GitHub: timer и/или webhook.
-# Если /opt/stratum-src ещё нет — сделает git clone (для private нужен STRATUM_GITHUB_TOKEN в env).
-# sudo bash deploy/debian/enable-auto-update.sh [--webhook]
+# Автообновление с GitHub при изменениях ветки main:
+#   • timer (polling) — запасной канал
+#   • webhook на push — мгновенно
+#
+# sudo bash deploy/debian/enable-auto-update.sh
+# sudo bash deploy/debian/enable-auto-update.sh --timer-only
+# sudo bash deploy/debian/enable-auto-update.sh --webhook-only
 set -euo pipefail
 
-WITH_WEBHOOK=0
-[[ "${1:-}" == "--webhook" ]] && WITH_WEBHOOK=1
+WITH_TIMER=1
+WITH_WEBHOOK=1
+for arg in "$@"; do
+  case "${arg}" in
+    --timer-only) WITH_WEBHOOK=0; WITH_TIMER=1 ;;
+    --webhook-only) WITH_WEBHOOK=1; WITH_TIMER=0 ;;
+    --webhook) WITH_WEBHOOK=1 ;; # backward compatible
+    --no-webhook) WITH_WEBHOOK=0 ;;
+    -h|--help)
+      echo "Usage: $0 [--timer-only|--webhook-only|--no-webhook]"
+      exit 0
+      ;;
+  esac
+done
 
 APP_ROOT="${APP_ROOT:-/opt/stratum}"
 ENV_DIR="/etc/stratum"
@@ -13,7 +29,7 @@ ENV_FILE="${ENV_DIR}/stratum.env"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if [[ "${EUID}" -ne 0 ]]; then
-  echo "Запустите от root: sudo bash $0 [--webhook]"
+  echo "Запустите от root: sudo bash $0"
   exit 1
 fi
 
@@ -36,8 +52,8 @@ stratum_load_git_env "${ENV_FILE}"
 GIT_DIR="${STRATUM_GIT_DIR:-/opt/stratum-src}"
 BRANCH="${STRATUM_GIT_BRANCH:-main}"
 REPO_URL="${STRATUM_REPO_URL:-${STRATUM_DEFAULT_REPO_URL}}"
+SERVER_NAME="${STRATUM_SERVER_NAME:-_}"
 
-# гарантируем ключи в env
 grep -q '^STRATUM_GIT_DIR=' "${ENV_FILE}" || echo "STRATUM_GIT_DIR=${GIT_DIR}" >>"${ENV_FILE}"
 grep -q '^STRATUM_GIT_BRANCH=' "${ENV_FILE}" || echo "STRATUM_GIT_BRANCH=${BRANCH}" >>"${ENV_FILE}"
 grep -q '^STRATUM_GIT_REMOTE=' "${ENV_FILE}" || echo "STRATUM_GIT_REMOTE=origin" >>"${ENV_FILE}"
@@ -45,19 +61,20 @@ grep -q '^STRATUM_AUTO_UPDATE=' "${ENV_FILE}" || echo "STRATUM_AUTO_UPDATE=1" >>
 if ! grep -q '^STRATUM_REPO_URL=' "${ENV_FILE}"; then
   echo "STRATUM_REPO_URL=${REPO_URL}" >>"${ENV_FILE}"
 fi
+# pin tracked branch to main unless already set differently
+if ! grep -q '^STRATUM_GIT_BRANCH=' "${ENV_FILE}"; then
+  echo "STRATUM_GIT_BRANCH=main" >>"${ENV_FILE}"
+fi
 
-# clone если нет (private: токен уже должен быть в env)
 if ! stratum_ensure_git_clone "${GIT_DIR}" "${BRANCH}" "${REPO_URL}" echo; then
   echo
   echo "Сначала положите токен в ${ENV_FILE}:"
   echo "  STRATUM_GITHUB_TOKEN=ghp_xxx"
   echo "  STRATUM_REPO_URL=${REPO_URL}"
   echo "Затем снова: sudo bash $0"
-  echo "Либо вручную: sudo git clone … ${GIT_DIR}  (см. docs/INSTALL.md §3)"
   exit 1
 fi
 
-# Private GitHub: токен в env (не в remote URL)
 HAS_TOKEN=0
 if grep -qE '^(STRATUM_GITHUB_TOKEN|GITHUB_TOKEN)=.+' "${ENV_FILE}" 2>/dev/null; then
   HAS_TOKEN=1
@@ -66,77 +83,75 @@ REMOTE_URL="$(git -C "${GIT_DIR}" remote get-url origin 2>/dev/null || true)"
 if [[ "${HAS_TOKEN}" -eq 0 && "${REMOTE_URL}" == https://github.com/* ]]; then
   echo "WARNING: нет STRATUM_GITHUB_TOKEN в ${ENV_FILE}"
   echo "  Для private repo auto-update упадёт на git fetch."
-  echo "  Добавьте:  STRATUM_GITHUB_TOKEN=ghp_xxx   (Contents: Read)"
-  echo "  Документация: docs/INSTALL.md §3"
 fi
 
-# синхронизируем скрипты в APP_ROOT на случай, если enable вызвали из src
 if [[ -d "${GIT_DIR}/deploy/debian" ]]; then
   rsync -a "${GIT_DIR}/deploy/debian/" "${APP_ROOT}/deploy/debian/"
 fi
-chmod +x "${APP_ROOT}/deploy/debian/"*.sh
-chmod +x "${APP_ROOT}/deploy/debian/webhook-server.py" 2>/dev/null || true
+chmod +x "${APP_ROOT}/deploy/debian/"*.sh "${APP_ROOT}/deploy/debian/"*.py 2>/dev/null || true
 
-install -m 644 "${APP_ROOT}/deploy/debian/stratum-auto-update.service" /etc/systemd/system/
-install -m 644 "${APP_ROOT}/deploy/debian/stratum-auto-update.timer" /etc/systemd/system/
-systemctl daemon-reload
-systemctl enable --now stratum-auto-update.timer
-
-echo "Timer включён:"
-systemctl list-timers stratum-auto-update.timer --no-pager || true
+if [[ "${WITH_TIMER}" -eq 1 ]]; then
+  install -m 644 "${APP_ROOT}/deploy/debian/stratum-auto-update.service" /etc/systemd/system/
+  install -m 644 "${APP_ROOT}/deploy/debian/stratum-auto-update.timer" /etc/systemd/system/
+  systemctl daemon-reload
+  systemctl enable --now stratum-auto-update.timer
+  echo "Timer включён (polling origin/${BRANCH}):"
+  systemctl list-timers stratum-auto-update.timer --no-pager || true
+fi
 
 if [[ "${WITH_WEBHOOK}" -eq 1 ]]; then
   if ! grep -q '^STRATUM_WEBHOOK_SECRET=' "${ENV_FILE}"; then
     SECRET="$(openssl rand -hex 24)"
     echo "STRATUM_WEBHOOK_SECRET=${SECRET}" >>"${ENV_FILE}"
-    echo "Сгенерирован STRATUM_WEBHOOK_SECRET (сохранён в ${ENV_FILE})"
+    echo "Сгенерирован STRATUM_WEBHOOK_SECRET → ${ENV_FILE}"
   else
     # shellcheck disable=SC1090
-    source "${ENV_FILE}"
+    set -a && source "${ENV_FILE}" && set +a
     SECRET="${STRATUM_WEBHOOK_SECRET}"
   fi
 
-  install -m 644 "${APP_ROOT}/deploy/debian/stratum-webhook.service" /etc/systemd/system/
-  # nginx snippet for webhook
+  # nginx: HTTP + SSL (после certbot) — location /hooks/github
   if [[ -f /etc/nginx/sites-available/stratum ]]; then
-    if ! grep -q 'location /hooks/github' /etc/nginx/sites-available/stratum; then
-      python3 - <<'PY'
-from pathlib import Path
-path = Path("/etc/nginx/sites-available/stratum")
-text = path.read_text()
-snippet = """
-    location /hooks/github {
-        proxy_pass http://127.0.0.1:9000/hooks/github;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Hub-Signature-256 $http_x_hub_signature_256;
-        proxy_set_header X-GitHub-Event $http_x_github_event;
-        proxy_read_timeout 10s;
-    }
-"""
-    if "location /api/" in text and snippet.strip() not in text:
-        text = text.replace("location /api/", snippet + "\n    location /api/", 1)
-        path.write_text(text)
-PY
-      nginx -t && systemctl reload nginx
-    fi
+    python3 "${APP_ROOT}/deploy/debian/patch-webhook-nginx.py" /etc/nginx/sites-available/stratum
+    nginx -t && systemctl reload nginx
   fi
 
+  install -m 644 "${APP_ROOT}/deploy/debian/stratum-webhook.service" /etc/systemd/system/
   systemctl daemon-reload
   systemctl enable --now stratum-webhook
-  IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+  systemctl restart stratum-webhook
+
+  sleep 1
+  if curl -fsS http://127.0.0.1:9000/health >/dev/null; then
+    echo "Webhook service OK (:9000)"
+  else
+    echo "ERROR: stratum-webhook не отвечает на :9000" >&2
+    systemctl status stratum-webhook --no-pager || true
+    exit 1
+  fi
+
+  HOOK_URL="http://YOUR_VPS/hooks/github"
+  if [[ -n "${SERVER_NAME}" && "${SERVER_NAME}" != "_" ]]; then
+    HOOK_URL="https://${SERVER_NAME}/hooks/github"
+  fi
+
   echo
-  echo "Webhook включён."
-  echo "  URL:    http://${IP:-YOUR_VPS}/hooks/github"
-  echo "  Secret: см. STRATUM_WEBHOOK_SECRET в ${ENV_FILE}"
-  echo "В GitHub → Settings → Webhooks:"
+  echo "Webhook включён (push → refs/heads/${BRANCH})."
+  echo "  GitHub → Settings → Webhooks → Add webhook"
+  echo "  Payload URL:  ${HOOK_URL}"
   echo "  Content type: application/json"
-  echo "  Secret: <из stratum.env>"
-  echo "  Events: Just the push event"
+  echo "  Secret:       STRATUM_WEBHOOK_SECRET в ${ENV_FILE}"
+  echo "  Events:       Just the push event"
+  echo
+  echo "Проверка:"
+  echo "  curl -fsS http://127.0.0.1:9000/health"
+  if [[ -n "${SERVER_NAME}" && "${SERVER_NAME}" != "_" ]]; then
+    echo "  curl -fsS https://${SERVER_NAME}/hooks/github/health"
+  fi
 fi
 
 echo
-echo "Клон:          ${GIT_DIR}"
+echo "Клон:          ${GIT_DIR} @ ${BRANCH}"
+echo "Статус:        sudo bash ${APP_ROOT}/deploy/debian/auto-update-status.sh"
 echo "Ручной прогон: sudo bash ${APP_ROOT}/deploy/debian/auto-update.sh --force"
-echo "Логи timer:    journalctl -u stratum-auto-update -f"
-echo "Private repo:  STRATUM_GITHUB_TOKEN в ${ENV_FILE} (см. docs/INSTALL.md §3)"
+echo "Логи:          journalctl -u stratum-auto-update -u stratum-webhook -f"

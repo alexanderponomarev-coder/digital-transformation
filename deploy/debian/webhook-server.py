@@ -38,10 +38,11 @@ def verify_signature(body: bytes, header: str | None) -> bool:
     return hmac.compare_digest(header, f"sha256={digest}")
 
 
-def trigger_update() -> None:
-    log.info("starting auto-update")
+def trigger_update(*, reason: str) -> None:
+    # без --force: если SHA уже совпал (timer успел раньше) — no-op
+    log.info("starting auto-update (%s)", reason)
     try:
-        subprocess.run(["bash", AUTO_UPDATE, "--force"], check=True)
+        subprocess.run(["bash", AUTO_UPDATE], check=True)
         log.info("auto-update finished")
     except Exception:
         log.exception("auto-update failed")
@@ -92,12 +93,20 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         ref = payload.get("ref", "")
-        if ref not in (f"refs/heads/{BRANCH}",):
-            self._json(200, {"ok": True, "ignored_ref": ref})
+        expected = f"refs/heads/{BRANCH}"
+        if ref != expected:
+            self._json(200, {"ok": True, "ignored_ref": ref, "want": expected})
             return
 
-        threading.Thread(target=trigger_update, daemon=True).start()
-        self._json(202, {"ok": True, "accepted": True, "ref": ref})
+        after = str(payload.get("after") or "")[:12]
+        reason = f"push {ref}@{after or '?'}"
+        threading.Thread(
+            target=trigger_update, kwargs={"reason": reason}, daemon=True
+        ).start()
+        self._json(
+            202,
+            {"ok": True, "accepted": True, "ref": ref, "after": after, "branch": BRANCH},
+        )
 
 
 def main() -> None:

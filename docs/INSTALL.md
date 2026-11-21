@@ -331,13 +331,17 @@ sudo git -C /opt/stratum-src fetch origin
 - Не коммитьте `stratum.env` / токен в репозиторий.
 - Не давайте токену права шире **Contents: Read**, если достаточно auto-update.
 
-### 3.4. Timer (~каждые 5 минут)
+### 3.4. Автообновление при изменении `main` (timer + webhook)
+
+Полный runbook: [AUTO_UPDATE.md](AUTO_UPDATE.md).
 
 ```bash
+# включает timer (~2 мин) И webhook на push в main
 sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh
-sudo systemctl list-timers stratum-auto-update.timer --no-pager
-sudo journalctl -u stratum-auto-update -n 50 --no-pager
+sudo bash /opt/stratum/deploy/debian/auto-update-status.sh
 ```
+
+Только polling: `…/enable-auto-update.sh --timer-only`.
 
 Ручной прогон:
 
@@ -347,30 +351,26 @@ sudo bash /opt/stratum/deploy/debian/auto-update.sh --force
 
 Если в логе `hint: private repo — добавьте STRATUM_GITHUB_TOKEN` — вернитесь к §3.1.
 
-### 3.5. Webhook (мгновенно на push в `main`)
+### 3.5. GitHub Webhook (мгновенно на push в `main`)
 
-Работает и для private: GitHub шлёт событие на ваш URL; на сервере обновление всё равно идёт через `git fetch` с токеном/ключом из §3.1–3.2.
+`enable-auto-update.sh` поднимает webhook по умолчанию. В GitHub → **Settings → Webhooks → Add webhook**:
 
-```bash
-sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh --webhook
-```
-
-В GitHub → **Settings → Webhooks → Add webhook**:
-
-| Поле | Только STRATUM | Cohost (по домену) |
-|------|----------------|---------------------|
-| Payload URL | `http://IP/hooks/github` | `https://stratum.example.com/hooks/github` |
-| Content type | `application/json` | то же |
-| Secret | `STRATUM_WEBHOOK_SECRET` из `/etc/stratum/stratum.env` | то же |
-| Events | Just the **push** event | то же |
+| Поле | Значение |
+|------|----------|
+| Payload URL | `https://1-web.ru/hooks/github` (или ваш `STRATUM_SERVER_NAME`) |
+| Content type | `application/json` |
+| Secret | `STRATUM_WEBHOOK_SECRET` из `/etc/stratum/stratum.env` |
+| Events | Just the **push** event |
 
 Проверка:
 
 ```bash
-curl -fsS http://127.0.0.1:9000/health \
-  || curl -fsS -H 'Host: stratum.example.com' http://127.0.0.1/hooks/github/health
+curl -fsS http://127.0.0.1:9000/health
+curl -fsS https://1-web.ru/hooks/github/health
 sudo systemctl status stratum-webhook --no-pager
 ```
+
+`502` на `/hooks/github` = сервис не запущен → снова `enable-auto-update.sh`.
 
 ### 3.6. Чеклист private auto-update
 

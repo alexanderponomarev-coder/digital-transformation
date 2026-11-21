@@ -72,11 +72,9 @@ export function WorkspaceShell() {
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-100 bg-white/60 px-5 py-4 backdrop-blur">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-tide-600">
-              {snapshot?.overview.version ?? 'MVP'}
-              {snapshot?.overview.deploy_mode ? (
-                <span className="ml-2 tracking-normal text-ink-400">
-                  · {snapshot.overview.deploy_mode === 'demo' ? 'demo-стенд' : 'lab'}
-                </span>
+              {snapshot?.overview.version ?? 'Демо'}
+              {snapshot?.overview.is_demo !== false ? (
+                <span className="ml-2 tracking-normal text-ember-600">· демо</span>
               ) : null}
             </p>
             <h1 className="font-display text-xl font-bold text-ink-900">
@@ -89,14 +87,15 @@ export function WorkspaceShell() {
           </div>
         </header>
 
-        {snapshot?.overview.storage_disclaimer ? (
-          <div
-            role="note"
-            className="border-b border-amber-200/80 bg-amber-50/90 px-5 py-2 text-xs leading-relaxed text-ink-700"
-          >
-            {snapshot.overview.storage_disclaimer}
-          </div>
-        ) : null}
+        <div
+          role="note"
+          className="border-b border-ember-500/30 bg-ember-100/90 px-5 py-2.5 text-xs leading-relaxed text-ink-800"
+        >
+          <span className="font-semibold text-ember-600">Демо-версия.</span>{' '}
+          {snapshot?.overview.demo_label ||
+            snapshot?.overview.storage_disclaimer ||
+            'Синтетические данные «СеверПром». Не использовать для реальных решений.'}
+        </div>
 
         <main className="px-5 py-6">
           {loading && !snapshot && (

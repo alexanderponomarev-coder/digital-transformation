@@ -1,19 +1,24 @@
 {
   "overview": {
-    "project_name": "Агентная трансформация СеверПром",
-    "company_name": "СеверПром",
-    "industry": "Промышленный холдинг / дистрибуция",
+    "project_name": "[ДЕМО] Агентная трансформация СеверПром",
+    "company_name": "СеверПром (синтетика)",
+    "industry": "Промышленный холдинг / дистрибуция · демо-корпус",
     "coverage_threshold": 0.55,
-    "version": "MVP 0.1",
+    "version": "Демо 0.2 · полный цикл",
     "mvp_layers": [
       "strategy",
       "processes",
       "data"
     ],
-    "open_questions_count": 5,
-    "approved_insights_count": 1,
-    "blocked_cases_count": 2,
-    "overall_coverage": 0.54
+    "open_questions_count": 10,
+    "approved_insights_count": 4,
+    "blocked_cases_count": 3,
+    "overall_coverage": 0.58,
+    "deploy_mode": "lab",
+    "persistence": "in_memory",
+    "storage_disclaimer": "ДЕМО-ВЕРСИЯ · все данные синтетические (холдинг «СеверПром»). Не являются сведениями реального заказчика и не предназначены для решений. Данные только в RAM процесса API: перезапуск или reset уничтожает изменения. Персистентного хранилища и бэкапа нет.",
+    "is_demo": true,
+    "demo_label": "ДЕМО-ВЕРСИЯ · все данные синтетические (холдинг «СеверПром»). Не являются сведениями реального заказчика и не предназначены для решений."
   },
   "layers": [
     {
@@ -227,6 +232,316 @@
       "ingest_error": null,
       "owner_id": null,
       "acl_readers": []
+    },
+    {
+      "id": "doc-risk-appetite",
+      "title": "[ДЕМО] Матрица риск-аппетита (синтетика)",
+      "format": "xlsx",
+      "uploaded_at": "2025-01-01",
+      "version": 1,
+      "replaces_id": null,
+      "layers": [
+        "strategy",
+        "governance"
+      ],
+      "freshness_days": 10,
+      "size_label": "0.3 МБ",
+      "summary": "Уровни риска по функциям OTC/финансы/сервис.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-org-chart",
+      "title": "[ДЕМО] Оргструктура ИТ и данных",
+      "format": "pdf",
+      "uploaded_at": "2025-02-02",
+      "version": 2,
+      "replaces_id": null,
+      "layers": [
+        "governance",
+        "strategy"
+      ],
+      "freshness_days": 17,
+      "size_label": "0.4 МБ",
+      "summary": "CDO → CEO; владельцы доменов не везде назначены.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-sla-otc",
+      "title": "[ДЕМО] SLA сервисов OTC",
+      "format": "docx",
+      "uploaded_at": "2025-03-03",
+      "version": 3,
+      "replaces_id": null,
+      "layers": [
+        "processes"
+      ],
+      "freshness_days": 24,
+      "size_label": "0.6 МБ",
+      "summary": "Нормативы очереди, эскалации, окна обслуживания.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-credit-policy",
+      "title": "[ДЕМО] Кредитная политика (фрагмент)",
+      "format": "pdf",
+      "uploaded_at": "2025-04-04",
+      "version": 1,
+      "replaces_id": null,
+      "layers": [
+        "processes",
+        "governance"
+      ],
+      "freshness_days": 31,
+      "size_label": "0.8 МБ",
+      "summary": "Лимиты, скоринг, запрет авто-write лимитов.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-mdm-plan",
+      "title": "[ДЕМО] План MDM «Клиенты» 2025–2026",
+      "format": "pptx",
+      "uploaded_at": "2025-05-05",
+      "version": 2,
+      "replaces_id": null,
+      "layers": [
+        "data"
+      ],
+      "freshness_days": 38,
+      "size_label": "0.9 МБ",
+      "summary": "Цели качества 85%→90%, роли steward.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-pdn-register",
+      "title": "[ДЕМО] Реестр обработки ПДн (синтетика)",
+      "format": "xlsx",
+      "uploaded_at": "2025-06-06",
+      "version": 3,
+      "replaces_id": null,
+      "layers": [
+        "data",
+        "governance"
+      ],
+      "freshness_days": 45,
+      "size_label": "1.1 МБ",
+      "summary": "8 категорий; основания 152-ФЗ частично заполнены.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-api-catalog",
+      "title": "[ДЕМО] Черновик каталога API",
+      "format": "xlsx",
+      "uploaded_at": "2025-07-07",
+      "version": 1,
+      "replaces_id": null,
+      "layers": [
+        "tools"
+      ],
+      "freshness_days": 52,
+      "size_label": "1.2 МБ",
+      "summary": "37 endpoint; write-права агентов не размечены.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-kafka-topology",
+      "title": "[ДЕМО] Топология шины событий",
+      "format": "pptx",
+      "uploaded_at": "2025-08-08",
+      "version": 2,
+      "replaces_id": null,
+      "layers": [
+        "tools",
+        "data"
+      ],
+      "freshness_days": 59,
+      "size_label": "1.4 МБ",
+      "summary": "Топики заказов, остатков, кредитных событий.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-incident-ai",
+      "title": "[ДЕМО] Регламент инцидентов ИИ (черновик)",
+      "format": "docx",
+      "uploaded_at": "2025-09-09",
+      "version": 3,
+      "replaces_id": null,
+      "layers": [
+        "governance"
+      ],
+      "freshness_days": 66,
+      "size_label": "1.5 МБ",
+      "summary": "Эскалация; учения не проводились.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-board-pack",
+      "title": "[ДЕМО] Материалы для совета (черновик)",
+      "format": "pdf",
+      "uploaded_at": "2025-01-10",
+      "version": 1,
+      "replaces_id": null,
+      "layers": [
+        "strategy",
+        "governance"
+      ],
+      "freshness_days": 73,
+      "size_label": "1.6 МБ",
+      "summary": "Статус пилотов агентов; без стандарта осмотрительности.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-support-kb",
+      "title": "[ДЕМО] База знаний 1-й линии (выдержка)",
+      "format": "docx",
+      "uploaded_at": "2025-02-11",
+      "version": 2,
+      "replaces_id": null,
+      "layers": [
+        "processes",
+        "data"
+      ],
+      "freshness_days": 80,
+      "size_label": "1.8 МБ",
+      "summary": "420 статей; дубли и устаревшие версии.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-wms-as-is",
+      "title": "[ДЕМО] AS-IS складской контур",
+      "format": "pptx",
+      "uploaded_at": "2025-03-12",
+      "version": 3,
+      "replaces_id": null,
+      "layers": [
+        "processes",
+        "tools"
+      ],
+      "freshness_days": 87,
+      "size_label": "1.9 МБ",
+      "summary": "WMS + 1С; ручные корректировки остатков.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-cost-model",
+      "title": "[ДЕМО] Модель стоимости часа (синтетика)",
+      "format": "xlsx",
+      "uploaded_at": "2025-04-13",
+      "version": 1,
+      "replaces_id": null,
+      "layers": [
+        "strategy"
+      ],
+      "freshness_days": 94,
+      "size_label": "2.1 МБ",
+      "summary": "Ставки ролей OTC/поддержка/аналитика — для ROI.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-vendor-llm",
+      "title": "[ДЕМО] Сравнение LLM-контуров (синтетика)",
+      "format": "pdf",
+      "uploaded_at": "2025-05-14",
+      "version": 2,
+      "replaces_id": null,
+      "layers": [
+        "tools",
+        "governance"
+      ],
+      "freshness_days": 101,
+      "size_label": "2.2 МБ",
+      "summary": "On-prem vs облако; рекомендация on-prem для ПДн.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
+    },
+    {
+      "id": "doc-pilot-charter",
+      "title": "[ДЕМО] Устав пилота OTC-агент",
+      "format": "docx",
+      "uploaded_at": "2025-06-15",
+      "version": 3,
+      "replaces_id": null,
+      "layers": [
+        "strategy",
+        "processes"
+      ],
+      "freshness_days": 108,
+      "size_label": "2.4 МБ",
+      "summary": "KPI пилота; HITL; объём 40% заказов.",
+      "status": "ready",
+      "version_status": "active",
+      "conflict_with_ids": [],
+      "ingest_error": null,
+      "owner_id": null,
+      "acl_readers": []
     }
   ],
   "facts": [
@@ -431,17 +746,428 @@
       "sample_size": null,
       "metric_value": null,
       "metric_unit": null
+    },
+    {
+      "id": "fx1",
+      "text": "Риск-аппетит «умеренный»: автономия >3 на деньгах запрещена без HITL.",
+      "entity_type": "risk",
+      "layers": [
+        "strategy",
+        "governance"
+      ],
+      "source": {
+        "document_id": "doc-risk-appetite",
+        "document_title": "[ДЕМО] …/doc-risk-appetite",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "high",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx2",
+      "text": "CDO формально подчиняется CEO; Data Steward назначен только в домене «Клиенты».",
+      "entity_type": "role",
+      "layers": [
+        "governance"
+      ],
+      "source": {
+        "document_id": "doc-org-chart",
+        "document_title": "[ДЕМО] …/doc-org-chart",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "high",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx3",
+      "text": "Норматив эскалации кредитного контроля — 4 ч; факт p90=11 ч (синтетика Q3).",
+      "entity_type": "kpi",
+      "layers": [
+        "processes"
+      ],
+      "source": {
+        "document_id": "doc-sla-otc",
+        "document_title": "[ДЕМО] …/doc-sla-otc",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "medium",
+      "evidence_kind": "observed",
+      "period": "2025",
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx4",
+      "text": "Автоматическое повышение лимита в ERP без подписи контролёра запрещено.",
+      "entity_type": "risk",
+      "layers": [
+        "processes",
+        "governance"
+      ],
+      "source": {
+        "document_id": "doc-credit-policy",
+        "document_title": "[ДЕМО] …/doc-credit-policy",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "high",
+      "evidence_kind": "norm",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx5",
+      "text": "Целевой индекс качества MDM «Клиенты»: 85% к Q1 2026, 90% к Q3 2026.",
+      "entity_type": "kpi",
+      "layers": [
+        "data"
+      ],
+      "source": {
+        "document_id": "doc-mdm-plan",
+        "document_title": "[ДЕМО] …/doc-mdm-plan",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "high",
+      "evidence_kind": "norm",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx6",
+      "text": "Категория «контактные данные B2B» — 1.2 млн записей; трансграничная передача не заявлена.",
+      "entity_type": "data",
+      "layers": [
+        "data"
+      ],
+      "source": {
+        "document_id": "doc-pdn-register",
+        "document_title": "[ДЕМО] …/doc-pdn-register",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "medium",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx7",
+      "text": "Endpoint /erp/limits допускает write; ACL для сервис-аккаунтов агента не описан.",
+      "entity_type": "system",
+      "layers": [
+        "tools"
+      ],
+      "source": {
+        "document_id": "doc-api-catalog",
+        "document_title": "[ДЕМО] …/doc-api-catalog",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "medium",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx8",
+      "text": "Топик otc.credit.events — источник сигналов для агента-рекомендателя.",
+      "entity_type": "system",
+      "layers": [
+        "tools",
+        "data"
+      ],
+      "source": {
+        "document_id": "doc-kafka-topology",
+        "document_title": "[ДЕМО] …/doc-kafka-topology",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "high",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx9",
+      "text": "Класс инцидента «ложное одобрение кредита» — эскалация CDO+COO в течение 2 ч.",
+      "entity_type": "risk",
+      "layers": [
+        "governance"
+      ],
+      "source": {
+        "document_id": "doc-incident-ai",
+        "document_title": "[ДЕМО] …/doc-incident-ai",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "medium",
+      "evidence_kind": "norm",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx10",
+      "text": "Совет запросил ежеквартальный отчёт по пилотам агентов; график ещё не утверждён.",
+      "entity_type": "other",
+      "layers": [
+        "strategy",
+        "governance"
+      ],
+      "source": {
+        "document_id": "doc-board-pack",
+        "document_title": "[ДЕМО] …/doc-board-pack",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "low",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx11",
+      "text": "18% статей базы знаний старше 18 месяцев без ревизии (синтетический аудит).",
+      "entity_type": "kpi",
+      "layers": [
+        "data",
+        "processes"
+      ],
+      "source": {
+        "document_id": "doc-support-kb",
+        "document_title": "[ДЕМО] …/doc-support-kb",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "medium",
+      "evidence_kind": "observed",
+      "period": "2025",
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx12",
+      "text": "Корректировки остатков вручную — ~120 операций/нед; кандидат на агента ур.2 с HITL.",
+      "entity_type": "process",
+      "layers": [
+        "processes"
+      ],
+      "source": {
+        "document_id": "doc-wms-as-is",
+        "document_title": "[ДЕМО] …/doc-wms-as-is",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "medium",
+      "evidence_kind": "observed",
+      "period": "2025",
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx13",
+      "text": "Ставка часа кредитного контролёра (синтетика): 2 400 ₽; аналитика данных: 3 100 ₽.",
+      "entity_type": "kpi",
+      "layers": [
+        "strategy"
+      ],
+      "source": {
+        "document_id": "doc-cost-model",
+        "document_title": "[ДЕМО] …/doc-cost-model",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "medium",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx14",
+      "text": "Для ПДн рекомендован только on-prem / изолированный контур; облачные LLM — блок.",
+      "entity_type": "risk",
+      "layers": [
+        "tools",
+        "governance"
+      ],
+      "source": {
+        "document_id": "doc-vendor-llm",
+        "document_title": "[ДЕМО] …/doc-vendor-llm",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "high",
+      "evidence_kind": "norm",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx15",
+      "text": "Пилот OTC: 40% заказов, KPI — очередь ≤2 ч и precision рекомендаций ≥90%.",
+      "entity_type": "kpi",
+      "layers": [
+        "strategy",
+        "processes"
+      ],
+      "source": {
+        "document_id": "doc-pilot-charter",
+        "document_title": "[ДЕМО] …/doc-pilot-charter",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "high",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx16",
+      "text": "Синтетика Q3: 1 840 кейсов кредитного контроля; 12% — серая зона скоринга.",
+      "entity_type": "kpi",
+      "layers": [
+        "processes"
+      ],
+      "source": {
+        "document_id": "doc-otc-journal",
+        "document_title": "[ДЕМО] …/doc-otc-journal",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "high",
+      "evidence_kind": "observed",
+      "period": "2025",
+      "sample_size": null,
+      "metric_value": "1840",
+      "metric_unit": "кейсов"
+    },
+    {
+      "id": "fx17",
+      "text": "Домен «Номенклатура» — качество 88%; домен «Контрагенты» — 72%.",
+      "entity_type": "kpi",
+      "layers": [
+        "data"
+      ],
+      "source": {
+        "document_id": "doc-data-catalog",
+        "document_title": "[ДЕМО] …/doc-data-catalog",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "high",
+      "evidence_kind": "observed",
+      "period": "2025",
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx18",
+      "text": "Bitrix24 ↔ 1С:УХ — 6 интеграций без единого SLA и владельца контракта.",
+      "entity_type": "system",
+      "layers": [
+        "tools"
+      ],
+      "source": {
+        "document_id": "doc-it-landscape",
+        "document_title": "[ДЕМО] …/doc-it-landscape",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "medium",
+      "evidence_kind": "unknown",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx19",
+      "text": "Черновик требует двух подписей на допуск агента в прод; процедура не пилотировалась.",
+      "entity_type": "risk",
+      "layers": [
+        "governance"
+      ],
+      "source": {
+        "document_id": "doc-ai-policy-draft",
+        "document_title": "[ДЕМО] …/doc-ai-policy-draft",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "medium",
+      "evidence_kind": "norm",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
+    },
+    {
+      "id": "fx20",
+      "text": "Цифровые каналы должны дать ≥35% прироста заказов к 2027 (синтетическая цель).",
+      "entity_type": "kpi",
+      "layers": [
+        "strategy"
+      ],
+      "source": {
+        "document_id": "doc-strategy-2025",
+        "document_title": "[ДЕМО] …/doc-strategy-2025",
+        "fragment": "синтетический фрагмент",
+        "page": null
+      },
+      "confidence": "high",
+      "evidence_kind": "norm",
+      "period": null,
+      "sample_size": null,
+      "metric_value": null,
+      "metric_unit": null
     }
   ],
   "coverage": [
     {
       "layer_id": "strategy",
       "status": "partial",
-      "score": 0.72,
+      "score": 0.76,
       "threshold": 0.55,
       "document_ids": [
         "doc-strategy-2025",
-        "doc-ai-policy-draft"
+        "doc-ai-policy-draft",
+        "doc-risk-appetite",
+        "doc-board-pack",
+        "doc-pilot-charter",
+        "doc-cost-model"
       ],
       "blind_zones": [
         {
@@ -458,11 +1184,16 @@
     {
       "layer_id": "processes",
       "status": "partial",
-      "score": 0.72,
+      "score": 0.76,
       "threshold": 0.55,
       "document_ids": [
         "doc-bpm-sales",
-        "doc-otc-journal"
+        "doc-otc-journal",
+        "doc-sla-otc",
+        "doc-credit-policy",
+        "doc-wms-as-is",
+        "doc-support-kb",
+        "doc-pilot-charter"
       ],
       "blind_zones": [
         {
@@ -479,11 +1210,15 @@
     {
       "layer_id": "data",
       "status": "partial",
-      "score": 0.58,
+      "score": 0.62,
       "threshold": 0.55,
       "document_ids": [
         "doc-data-catalog",
-        "doc-it-landscape"
+        "doc-it-landscape",
+        "doc-mdm-plan",
+        "doc-pdn-register",
+        "doc-kafka-topology",
+        "doc-support-kb"
       ],
       "blind_zones": [
         {
@@ -500,11 +1235,15 @@
     {
       "layer_id": "tools",
       "status": "partial",
-      "score": 0.41,
+      "score": 0.45,
       "threshold": 0.55,
       "document_ids": [
         "doc-it-landscape",
-        "doc-bpm-sales"
+        "doc-bpm-sales",
+        "doc-api-catalog",
+        "doc-kafka-topology",
+        "doc-vendor-llm",
+        "doc-wms-as-is"
       ],
       "blind_zones": [
         {
@@ -521,11 +1260,18 @@
     {
       "layer_id": "governance",
       "status": "missing",
-      "score": 0.28,
+      "score": 0.32,
       "threshold": 0.55,
       "document_ids": [
         "doc-ai-policy-draft",
-        "doc-strategy-2025"
+        "doc-strategy-2025",
+        "doc-org-chart",
+        "doc-risk-appetite",
+        "doc-credit-policy",
+        "doc-pdn-register",
+        "doc-incident-ai",
+        "doc-board-pack",
+        "doc-vendor-llm"
       ],
       "blind_zones": [
         {
@@ -590,6 +1336,76 @@
       "status": "open",
       "answer": null,
       "answered_at": null
+    },
+    {
+      "id": "q6",
+      "layer_id": "processes",
+      "to_role": "Кредитный контролёр",
+      "question": "Какой % серой зоны скоринга допустим для авто-рекомендации без эскалации?",
+      "why": "Журнал OTC показывает 12% серой зоны; порог не зафиксирован.",
+      "status": "open",
+      "answer": null,
+      "answered_at": null
+    },
+    {
+      "id": "q7",
+      "layer_id": "data",
+      "to_role": "Data Steward «Клиенты»",
+      "question": "Когда будет закрыт план качества MDM до 85%?",
+      "why": "Пилот OTC завязан на порог качества данных.",
+      "status": "answered",
+      "answer": "Целевой срок — конец Q1 2026; промежуточный контроль ежемесячно.",
+      "answered_at": "2025-11-15"
+    },
+    {
+      "id": "q8",
+      "layer_id": "tools",
+      "to_role": "Архитектор интеграций",
+      "question": "Какие топики Kafka разрешены агенту на чтение в пилоте?",
+      "why": "Топология есть, матрица tool-прав — нет.",
+      "status": "open",
+      "answer": null,
+      "answered_at": null
+    },
+    {
+      "id": "q9",
+      "layer_id": "governance",
+      "to_role": "CDO",
+      "question": "Кто подписывает допуск агента кредитного контроля в прод (две роли)?",
+      "why": "Черновик политики требует две подписи; роли не названы.",
+      "status": "open",
+      "answer": null,
+      "answered_at": null
+    },
+    {
+      "id": "q10",
+      "layer_id": "strategy",
+      "to_role": "Куратор совета",
+      "question": "Какой график отчётности по пилотам агентов утверждён советом?",
+      "why": "Board-pack запросил отчётность без утверждённого календаря.",
+      "status": "open",
+      "answer": null,
+      "answered_at": null
+    },
+    {
+      "id": "q11",
+      "layer_id": "processes",
+      "to_role": "Владелец складского контура",
+      "question": "Допустима ли рекомендация агента по корректировке остатков с HITL кладовщика?",
+      "why": "AS-IS WMS показывает высокий объём ручных правок.",
+      "status": "open",
+      "answer": null,
+      "answered_at": null
+    },
+    {
+      "id": "q12",
+      "layer_id": "governance",
+      "to_role": "ИБ / ФСТЭК-контур",
+      "question": "Есть ли аттестация контура для on-prem LLM с ПДн?",
+      "why": "Сравнение LLM-контуров требует доверенной среды.",
+      "status": "answered",
+      "answer": "Аттестация в плане на H1 2026; до этого — изолированный lab-контур без прод-ПДн.",
+      "answered_at": "2025-11-18"
     }
   ],
   "insights": [
@@ -670,6 +1486,120 @@
       "confidence": "medium",
       "approval": "pending",
       "owner_role": "CEO"
+    },
+    {
+      "id": "i5",
+      "layer_id": "governance",
+      "kind": "finding",
+      "title": "[ДЕМО] Пробел применения правил при наличии черновика политики",
+      "body": "Политика ИИ есть как документ, но допуск в прод и учения по остановке не проводились — аспект «применение правил» слабее технологии.",
+      "sources": [
+        {
+          "document_id": "doc-ai-policy-draft",
+          "document_title": "Черновик политики ИИ",
+          "fragment": "§3",
+          "page": null
+        }
+      ],
+      "confidence": "high",
+      "approval": "approved",
+      "owner_role": "CDO"
+    },
+    {
+      "id": "i6",
+      "layer_id": "tools",
+      "kind": "proposal",
+      "title": "[ДЕМО] Завести ACL write для сервис-аккаунта агента до пилота",
+      "body": "Без матрицы прав /erp/limits пилот либо заблокирован, либо идёт с теневым доступом.",
+      "sources": [
+        {
+          "document_id": "doc-api-catalog",
+          "document_title": "Каталог API",
+          "fragment": "limits",
+          "page": null
+        }
+      ],
+      "confidence": "medium",
+      "approval": "pending",
+      "owner_role": "CIO"
+    },
+    {
+      "id": "i7",
+      "layer_id": "processes",
+      "kind": "proposal",
+      "title": "[ДЕМО] Агент рекомендаций по остаткам WMS (ур. 2 + HITL)",
+      "body": "Синтетика: 120 ручных правок/нед. Кандидат после OTC-пилота, не параллельно.",
+      "sources": [
+        {
+          "document_id": "doc-wms-as-is",
+          "document_title": "AS-IS WMS",
+          "fragment": "корректировки",
+          "page": null
+        }
+      ],
+      "confidence": "medium",
+      "approval": "hypothesis",
+      "owner_role": "Владелец склада"
+    },
+    {
+      "id": "i8",
+      "layer_id": "data",
+      "kind": "finding",
+      "title": "[ДЕМО] Домен «Клиенты» — узкое место для всех агентных сценариев",
+      "body": "Качество 72% и дубли ограничивают и OTC, и RAG поддержки. Фундамент дорожной карты.",
+      "sources": [
+        {
+          "document_id": "doc-data-catalog",
+          "document_title": "Каталог данных",
+          "fragment": "Клиенты",
+          "page": null
+        }
+      ],
+      "confidence": "high",
+      "approval": "approved",
+      "owner_role": "CDO"
+    },
+    {
+      "id": "i9",
+      "layer_id": "strategy",
+      "kind": "finding",
+      "title": "[ДЕМО] Пилот OTC согласован со стратегией EBITDA",
+      "body": "Устав пилота и стратегия совпадают по приоритету операционной эффективности.",
+      "sources": [
+        {
+          "document_id": "doc-pilot-charter",
+          "document_title": "Устав пилота",
+          "fragment": "KPI",
+          "page": null
+        },
+        {
+          "document_id": "doc-strategy-2025",
+          "document_title": "Стратегия",
+          "fragment": "2.1",
+          "page": null
+        }
+      ],
+      "confidence": "high",
+      "approval": "approved",
+      "owner_role": "Директор по стратегии"
+    },
+    {
+      "id": "i10",
+      "layer_id": "governance",
+      "kind": "proposal",
+      "title": "[ДЕМО] Утвердить календарь отчётности совету до старта пилота",
+      "body": "Без графика надзора режим организации останется ситуативным.",
+      "sources": [
+        {
+          "document_id": "doc-board-pack",
+          "document_title": "Board pack",
+          "fragment": "отчётность",
+          "page": null
+        }
+      ],
+      "confidence": "medium",
+      "approval": "pending",
+      "owner_role": "Куратор совета"
     }
   ],
   "opportunities": [
@@ -735,6 +1665,66 @@
       "roi_hint": "−25% времени 1-й линии",
       "process_step_id": "service.l1",
       "hours_per_year": 2200.0
+    },
+    {
+      "id": "opp-5",
+      "title": "[ДЕМО] Агент ревизии базы знаний поддержки",
+      "process": "Клиентский сервис / KB",
+      "autonomy_level": 2,
+      "impact": "medium",
+      "effort": "low",
+      "regulatory_flags": [
+        "HITL на публикацию статей"
+      ],
+      "admissible": true,
+      "roi_hint": "Снижение устаревших статей; −15% повторных обращений",
+      "process_step_id": "service.kb_review",
+      "hours_per_year": 900.0
+    },
+    {
+      "id": "opp-6",
+      "title": "[ДЕМО] Агент-рекомендатель корректировок WMS",
+      "process": "Склад / остатки",
+      "autonomy_level": 2,
+      "impact": "medium",
+      "effort": "medium",
+      "regulatory_flags": [
+        "HITL кладовщика"
+      ],
+      "admissible": true,
+      "roi_hint": "Меньше ручных правок; точнее доступность",
+      "process_step_id": "wms.adjust",
+      "hours_per_year": 1400.0
+    },
+    {
+      "id": "opp-7",
+      "title": "[ДЕМО] Авто-списание ПДн без HITL",
+      "process": "Данные / retention",
+      "autonomy_level": 4,
+      "impact": "high",
+      "effort": "medium",
+      "regulatory_flags": [
+        "Блок: ПДн без HITL"
+      ],
+      "admissible": false,
+      "roi_hint": "Отклонён регуляторным фильтром",
+      "process_step_id": "data.retention",
+      "hours_per_year": 0.0
+    },
+    {
+      "id": "opp-8",
+      "title": "[ДЕМО] Мониторинг дрейфа скоринга OTC",
+      "process": "Риск / модели",
+      "autonomy_level": 2,
+      "impact": "medium",
+      "effort": "medium",
+      "regulatory_flags": [
+        "Аудит модели"
+      ],
+      "admissible": true,
+      "roi_hint": "Раннее обнаружение деградации precision",
+      "process_step_id": "risk.model_monitor",
+      "hours_per_year": 600.0
     }
   ],
   "roadmap": [
@@ -770,6 +1760,17 @@
         "Фактический ROI vs прогноз"
       ],
       "investment_mln": 14.0
+    },
+    {
+      "id": "ph-3",
+      "name": "[ДЕМО] Надзор и страхование риска",
+      "horizon": "12–18 мес",
+      "items": [
+        "Календарь отчётности совету",
+        "Учения по остановке агента",
+        "Пакет для оценки страхового покрытия (синтетика)"
+      ],
+      "investment_mln": 6.5
     }
   ],
   "roi": {
@@ -817,7 +1818,7 @@
       "подтверждённая ставка часа",
       "независимый пересчёт выгод по линиям"
     ],
-    "disclaimer": "Иллюстрация seed «СеверПром», не доказательный ROI. Для расчёта: POST /api/roi/compute. Денежный ROI публикуется только при kind=calculated."
+    "disclaimer": "ДЕМО-ВЕРСИЯ · все данные синтетические (холдинг «СеверПром»). Не являются сведениями реального заказчика и не предназначены для решений. ROI Illustrative / иллюстрация. Для расчёта: POST /api/roi/compute. Денежный ROI только при kind=calculated."
   },
   "regulatory": [
     {
@@ -962,11 +1963,194 @@
         "proc-otc",
         "agent-credit"
       ]
+    },
+    {
+      "id": "org-coo",
+      "type": "org",
+      "label": "COO",
+      "meta": "Совместное управление с CDO",
+      "linked_ids": [
+        "proc-otc",
+        "org-cdo"
+      ]
+    },
+    {
+      "id": "org-board",
+      "type": "org",
+      "label": "Совет директоров",
+      "meta": "Куратор пилотов (не утверждён)",
+      "linked_ids": [
+        "org-ceo"
+      ]
+    },
+    {
+      "id": "sys-kafka",
+      "type": "system",
+      "label": "Kafka",
+      "meta": "Шина событий",
+      "linked_ids": [
+        "proc-otc",
+        "agent-credit"
+      ]
+    },
+    {
+      "id": "sys-wms",
+      "type": "system",
+      "label": "WMS",
+      "meta": "Склад",
+      "linked_ids": [
+        "proc-wms"
+      ]
+    },
+    {
+      "id": "proc-wms",
+      "type": "process",
+      "label": "Складские корректировки",
+      "meta": "~120 ручных/нед",
+      "linked_ids": [
+        "sys-wms",
+        "agent-wms"
+      ]
+    },
+    {
+      "id": "agent-wms",
+      "type": "agent",
+      "label": "Агент рекомендаций WMS",
+      "meta": "Ур. 2 · HITL · демо",
+      "linked_ids": [
+        "proc-wms"
+      ]
+    },
+    {
+      "id": "kpi-queue",
+      "type": "kpi",
+      "label": "Очередь кредита ≤2 ч",
+      "meta": "Цель пилота",
+      "linked_ids": [
+        "agent-credit",
+        "proc-otc"
+      ]
     }
   ],
   "engine_metrics": {
     "extraction_accuracy": 0.86,
     "hallucination_rate": 0.04,
-    "coverage_completeness": 0.542
+    "coverage_completeness": 0.5820000000000001
+  },
+  "maturity": {
+    "scores": [
+      {
+        "domain_id": "infrastructure",
+        "aspect_id": "technology",
+        "level": 3
+      },
+      {
+        "domain_id": "infrastructure",
+        "aspect_id": "accountability",
+        "level": 3
+      },
+      {
+        "domain_id": "infrastructure",
+        "aspect_id": "rules",
+        "level": 2
+      },
+      {
+        "domain_id": "governance",
+        "aspect_id": "technology",
+        "level": 2
+      },
+      {
+        "domain_id": "governance",
+        "aspect_id": "accountability",
+        "level": 2
+      },
+      {
+        "domain_id": "governance",
+        "aspect_id": "rules",
+        "level": 1
+      },
+      {
+        "domain_id": "agents",
+        "aspect_id": "technology",
+        "level": 2
+      },
+      {
+        "domain_id": "agents",
+        "aspect_id": "accountability",
+        "level": 2
+      },
+      {
+        "domain_id": "agents",
+        "aspect_id": "rules",
+        "level": 1
+      },
+      {
+        "domain_id": "organization",
+        "aspect_id": "technology",
+        "level": 2
+      },
+      {
+        "domain_id": "organization",
+        "aspect_id": "accountability",
+        "level": 2
+      },
+      {
+        "domain_id": "organization",
+        "aspect_id": "rules",
+        "level": 2
+      }
+    ],
+    "domain_results": [
+      {
+        "domain_id": "infrastructure",
+        "title": "Инфраструктура",
+        "scores": {
+          "technology": 3,
+          "accountability": 3,
+          "rules": 2
+        },
+        "domain_level": 2,
+        "weakest_aspect": "rules"
+      },
+      {
+        "domain_id": "governance",
+        "title": "Управление",
+        "scores": {
+          "technology": 2,
+          "accountability": 2,
+          "rules": 1
+        },
+        "domain_level": 1,
+        "weakest_aspect": "rules"
+      },
+      {
+        "domain_id": "agents",
+        "title": "Возможности агентов",
+        "scores": {
+          "technology": 2,
+          "accountability": 2,
+          "rules": 1
+        },
+        "domain_level": 1,
+        "weakest_aspect": "rules"
+      },
+      {
+        "domain_id": "organization",
+        "title": "Организация",
+        "scores": {
+          "technology": 2,
+          "accountability": 2,
+          "rules": 2
+        },
+        "domain_level": 2,
+        "weakest_aspect": "accountability"
+      }
+    ],
+    "system_level": 1,
+    "max_operating_mode": 0,
+    "mode_label": "Ниже режима 1",
+    "next_step": "До режима 1 — «Управляемая инфраструктура»: утвердить мандат CDO, назначить владельцев данных и процессов, определить процедуру допуска входящих данных.",
+    "profile_summary": "Уровень системы (min областей) = 1. Инфраструктура: 2 (слабее — rules); Управление: 1 (слабее — rules); Возможности агентов: 1 (слабее — rules); Организация: 2 (слабее — accountability). Правило: оценка области = min(технология, ответственность, применение правил).",
+    "notes": "ДЕМО-ВЕРСИЯ · все данные синтетические (холдинг «СеверПром»). Не являются сведениями реального заказчика и не предназначены для решений. Иллюстративный профиль зрелости: инфраструктура выше, применение правил в управлении отстаёт."
   }
 }

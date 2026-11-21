@@ -3,6 +3,18 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from app.core.methodology import COVERAGE_THRESHOLD_DEFAULT, LAYERS
+from app.data.demo_corpus import (
+    DEMO_BANNER,
+    coverage_doc_map,
+    extra_documents,
+    extra_facts,
+    extra_insights,
+    extra_nodes,
+    extra_opportunities,
+    extra_questions,
+    extra_roadmap,
+    merge_coverage,
+)
 
 from app.models.schemas import (
     ApprovalStatus,
@@ -713,14 +725,34 @@ def build_snapshot() -> PlatformSnapshot:
 
     from app.services.maturity import seed_severprom_maturity
 
+    # --- полный демо-цикл: расширенный синтетический корпус ---
+    docs = docs + extra_documents()
+    facts = facts + extra_facts()
+    questions = questions + extra_questions()
+    insights = insights + extra_insights()
+    opportunities = opportunities + extra_opportunities()
+    roadmap = roadmap + extra_roadmap()
+    model_nodes = model_nodes + extra_nodes()
+    coverage = merge_coverage(coverage, coverage_doc_map())
+
+    maturity = seed_severprom_maturity()
+    maturity = maturity.model_copy(
+        update={
+            "notes": (
+                f"{DEMO_BANNER} Иллюстративный профиль зрелости: инфраструктура выше, "
+                "применение правил в управлении отстаёт."
+            )
+        }
+    )
+
     overall = sum(c.score for c in coverage) / len(coverage)
 
     overview = ProjectOverview(
-        project_name="Агентная трансформация СеверПром",
-        company_name="СеверПром",
-        industry="Промышленный холдинг / дистрибуция",
+        project_name="[ДЕМО] Агентная трансформация СеверПром",
+        company_name="СеверПром (синтетика)",
+        industry="Промышленный холдинг / дистрибуция · демо-корпус",
         coverage_threshold=COVERAGE_THRESHOLD_DEFAULT,
-        version="MVP 0.1",
+        version="Демо 0.2 · полный цикл",
         mvp_layers=[LayerId.STRATEGY, LayerId.PROCESSES, LayerId.DATA],
         open_questions_count=sum(1 for q in questions if q.status == "open"),
         approved_insights_count=sum(
@@ -729,6 +761,17 @@ def build_snapshot() -> PlatformSnapshot:
         blocked_cases_count=sum(1 for o in opportunities if not o.admissible)
         + sum(1 for r in regulatory if r.status == "block"),
         overall_coverage=round(overall, 2),
+        is_demo=True,
+        demo_label=DEMO_BANNER,
+    )
+
+    roi = roi.model_copy(
+        update={
+            "disclaimer": (
+                f"{DEMO_BANNER} ROI Illustrative / иллюстрация. "
+                "Для расчёта: POST /api/roi/compute. Денежный ROI только при kind=calculated."
+            )
+        }
     )
 
     return PlatformSnapshot(
@@ -749,7 +792,7 @@ def build_snapshot() -> PlatformSnapshot:
             hallucination_rate=0.04,
             coverage_completeness=overall,
         ),
-        maturity=seed_severprom_maturity(),
+        maturity=maturity,
     )
 
 

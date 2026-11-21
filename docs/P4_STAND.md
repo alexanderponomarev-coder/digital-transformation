@@ -38,42 +38,41 @@ STRATUM_CORS_ORIGINS=https://1-web.ru
 
 ## TLS на стенде (`1-web.ru`)
 
+### Важно (cohost с Klaris)
+
+Если на `:443` есть только cert `klaris.1-web.ru`, браузер на `https://1-web.ru` показывает ошибку сертификата и может открыть **Klaris**.
+
+`update.sh` / auto-update раньше затирал SSL-блок STRATUM. Теперь `render_stratum_nginx.py` **сохраняет** LE-cert для `STRATUM_SERVER_NAME` при каждом обновлении.
+
 1. DNS A/AAAA → IP VPS; порт **80** открыт (для ACME http-01).
-2. HTTP уже отвечает по имени:
+2. Выпуск / восстановление:
 
 ```bash
-curl -fsS -H 'Host: 1-web.ru' http://127.0.0.1/api/health
-# или снаружи:
-curl -fsS http://1-web.ru/api/health
-```
-
-3. Выпуск сертификата:
-
-```bash
+cd /opt/stratum-src && sudo git pull --ff-only origin main
+sudo bash /opt/stratum-src/deploy/debian/update.sh /opt/stratum-src
 sudo bash /opt/stratum/deploy/debian/enable-tls.sh 1-web.ru --email ops@example.com
-# или вручную:
-sudo apt-get install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d 1-web.ru
 ```
 
-4. Проверка:
+3. Проверка (должно быть STRATUM, CN=`1-web.ru`):
 
 ```bash
-curl -fsS https://1-web.ru/api/health
-echo | openssl s_client -connect 1-web.ru:443 -servername 1-web.ru 2>/dev/null | openssl x509 -noout -dates -subject
+echo | openssl s_client -connect 1-web.ru:443 -servername 1-web.ru 2>/dev/null \
+  | openssl x509 -noout -subject -ext subjectAltName
+curl -fsS https://1-web.ru/api/health   # product=STRATUM
+curl -fsS https://klaris.1-web.ru/health  # app=Klaris
+sudo nginx -T 2>/dev/null | grep -E 'server_name|listen .*443|ssl_certificate'
 ```
 
-### «Невозможно установить безопасное соединение»
+### «Невозможно установить безопасное соединение» / открывается Klaris
 
 | Причина | Что сделать |
 |---------|-------------|
-| Нет сертификата / только :80 | `enable-tls.sh` / certbot |
-| DNS ещё не на этот VPS | дождаться пропагации; `dig +short 1-web.ru` |
-| Cohost Klaris: чужой cert на :443 | отдельный `server_name` + `certbot -d` **на каждый** домен |
-| Смешанный контент / старый HSTS | жёсткий refresh; проверить `X-Forwarded-Proto` в nginx (уже в шаблоне) |
-| Firewall режет 443 | `ufw allow 443/tcp` (или security group) |
+| Cert только на `klaris.1-web.ru` | `enable-tls.sh 1-web.ru` |
+| После auto-update пропал SSL STRATUM | обновить код (≥ этот фикс) + снова `enable-tls.sh` |
+| DNS / HSTS | `dig +short 1-web.ru`; жёсткий refresh |
+| Firewall режет 443 | `ufw allow 443/tcp` |
 
-Обновление: `sudo certbot renew` (timer обычно ставит certbot сам).
+Обновление cert: `sudo certbot renew` (nginx конфиг STRATUM пересоберёт `update.sh` с тем же cert).
 
 ## Связанные файлы
 

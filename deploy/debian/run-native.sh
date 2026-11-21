@@ -79,17 +79,14 @@ for i in $(seq 1 40); do
   sleep 0.25
 done
 
-# nginx site на нужный порт / домен
+# nginx site на нужный порт / домен (с сохранением LE TLS если есть)
 TMP_CONF="/etc/nginx/sites-available/stratum"
-python3 - <<PY
-from pathlib import Path
-src = Path("${APP_ROOT}/deploy/debian/nginx-stratum.conf").read_text()
-src = src.replace("__STRATUM_HTTP_PORT__", "${HTTP_PORT}")
-src = src.replace("__STRATUM_API_PORT__", "${API_PORT}")
-src = src.replace("__STRATUM_SERVER_NAME__", "${SERVER_NAME}")
-src = src.replace("__STRATUM_DEFAULT_SERVER__", """${DEFAULT_SERVER}""")
-Path("${TMP_CONF}").write_text(src)
-PY
+python3 "${APP_ROOT}/deploy/debian/render_stratum_nginx.py" \
+  --output "${TMP_CONF}" \
+  --server-name "${SERVER_NAME}" \
+  --http-port "${HTTP_PORT}" \
+  --api-port "${API_PORT}" \
+  --default-server "${DEFAULT_SERVER}"
 ln -sfn "${TMP_CONF}" /etc/nginx/sites-enabled/stratum
 rm -f /etc/nginx/sites-enabled/default
 

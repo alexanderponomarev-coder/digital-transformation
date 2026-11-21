@@ -9,6 +9,7 @@ import {
   LineChart,
   ShieldAlert,
   Layers3,
+  Gauge,
 } from 'lucide-react'
 import { usePlatform } from '../context/PlatformContext'
 import { pct } from '../lib/labels'
@@ -18,6 +19,7 @@ const links = [
   { to: '/app/documents', label: 'Документы', icon: Files },
   { to: '/app/coverage', label: 'Покрытие', icon: Grid3X3 },
   { to: '/app/methodology', label: 'Методология', icon: Layers3 },
+  { to: '/app/maturity', label: 'Зрелость', icon: Gauge },
   { to: '/app/questions', label: 'Вопросы', icon: MessageSquareQuote },
   { to: '/app/model', label: 'Модель', icon: Waypoints },
   { to: '/app/roadmap', label: 'План и ROI', icon: Route },

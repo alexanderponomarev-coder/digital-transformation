@@ -296,6 +296,86 @@ class ComparisonResponse(BaseModel):
     summary: str
 
 
+class MaturityDomainId(str, Enum):
+    INFRASTRUCTURE = "infrastructure"
+    GOVERNANCE = "governance"
+    AGENTS = "agents"
+    ORGANIZATION = "organization"
+
+
+class MaturityAspectId(str, Enum):
+    TECHNOLOGY = "technology"
+    ACCOUNTABILITY = "accountability"
+    RULES = "rules"
+
+
+class MaturityAspect(BaseModel):
+    id: MaturityAspectId
+    title: str
+    description: str
+
+
+class MaturityLevel(BaseModel):
+    level: int
+    title: str
+    description: str
+
+
+class MaturityDomain(BaseModel):
+    id: MaturityDomainId
+    title: str
+    capabilities: str
+    focus: str
+    order: int
+
+
+class MaturityCell(BaseModel):
+    domain_id: MaturityDomainId
+    aspect_id: MaturityAspectId
+    level: int
+    description: str
+
+
+class MaturityMatrix(BaseModel):
+    title: str
+    rule: str
+    domains: list[MaturityDomain]
+    aspects: list[MaturityAspect]
+    levels: list[MaturityLevel]
+    cells: list[MaturityCell]
+
+
+class MaturityScore(BaseModel):
+    domain_id: MaturityDomainId
+    aspect_id: MaturityAspectId
+    level: int = Field(ge=1, le=4)
+
+
+class MaturityDomainResult(BaseModel):
+    domain_id: MaturityDomainId
+    title: str
+    scores: dict[str, int]
+    domain_level: int  # min of three aspects
+    weakest_aspect: MaturityAspectId
+
+
+class MaturityAssessment(BaseModel):
+    """12 scores + derived domain minima and operating-mode guidance."""
+
+    scores: list[MaturityScore]
+    domain_results: list[MaturityDomainResult] = Field(default_factory=list)
+    system_level: int = 1  # min across domains
+    max_operating_mode: int = 0  # 0 = below mode 1; 1–3 per CDO mandate
+    mode_label: str = ""
+    next_step: str = ""
+    profile_summary: str = ""
+    notes: str = ""
+
+
+class MaturityScoreUpdate(BaseModel):
+    scores: list[MaturityScore]
+
+
 class PlatformSnapshot(BaseModel):
     overview: ProjectOverview
     layers: list[MethodologyLayer]
@@ -310,6 +390,7 @@ class PlatformSnapshot(BaseModel):
     regulatory: list[RegulatoryCheck]
     model_nodes: list[EnterpriseNode]
     engine_metrics: EngineMetrics
+    maturity: MaturityAssessment | None = None
 
 
 class DocumentUploadRequest(BaseModel):

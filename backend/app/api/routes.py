@@ -15,6 +15,9 @@ from app.models.schemas import (
     ConfirmVersionRequest,
     DocumentAclRequest,
     DocumentUploadRequest,
+    MaturityAssessment,
+    MaturityMatrix,
+    MaturityScoreUpdate,
     Opportunity,
     PlatformSnapshot,
     ProjectOverview,
@@ -24,6 +27,7 @@ from app.models.schemas import (
 from app.services import audit_log, engine
 from app.services.acl import filter_snapshot_for_user, set_document_acl, user_can_read_document
 from app.services.compare import compare_alternatives, default_otc_cases
+from app.services.maturity import apply_score_updates, get_matrix, seed_severprom_maturity
 from app.services.regulatory import is_admissible, screen_opportunity
 from app.services.roi import compute_roi
 from app.services.store import store
@@ -266,6 +270,40 @@ def get_document(
         raise HTTPException(status_code=404, detail="Документ не найден")
     facts = [f.model_dump() for f in snap.facts if f.source.document_id == document_id]
     return {"document": doc.model_dump(), "facts": facts}
+
+
+@router.get("/maturity/matrix", response_model=MaturityMatrix)
+def maturity_matrix(auth: AuthContext = Depends(get_auth_context)) -> MaturityMatrix:
+    _ = auth
+    return get_matrix()
+
+
+@router.get("/maturity", response_model=MaturityAssessment)
+def get_maturity(auth: AuthContext = Depends(get_auth_context)) -> MaturityAssessment:
+    _ = auth
+    snap = store.get()
+    return snap.maturity or seed_severprom_maturity()
+
+
+@router.put("/maturity/scores", response_model=PlatformSnapshot)
+def put_maturity_scores(
+    payload: MaturityScoreUpdate,
+    auth: AuthContext = Depends(get_auth_context),
+) -> PlatformSnapshot:
+    def mutator(snap: PlatformSnapshot) -> PlatformSnapshot:
+        current = snap.maturity or seed_severprom_maturity()
+        updated = apply_score_updates(current, payload.scores)
+        return snap.model_copy(update={"maturity": updated})
+
+    snap = store.mutate(mutator)
+    audit_log.record(
+        actor=auth.user_id,
+        action="maturity.scores",
+        resource=f"system_level={snap.maturity.system_level if snap.maturity else '?'}",
+        tools_invoked=[],
+        detail=snap.maturity.mode_label if snap.maturity else "",
+    )
+    return filter_snapshot_for_user(snap, auth.user_id)
 
 
 @router.post("/reset", response_model=PlatformSnapshot)

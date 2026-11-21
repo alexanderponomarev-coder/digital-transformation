@@ -58,5 +58,5 @@ journalctl -u stratum-auto-update -n 8 --no-pager 2>/dev/null || true
 journalctl -u stratum-webhook -n 8 --no-pager 2>/dev/null || true
 
 echo
-echo "Включить всё: sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh"
-echo "GitHub webhook URL: https://${SERVER_NAME}/hooks/github  (Events: push, branch ${BRANCH})"
+echo "Включить timer: sudo bash /opt/stratum/deploy/debian/enable-auto-update.sh"
+echo "Webhook (опционально): …/enable-auto-update.sh --webhook"

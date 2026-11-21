@@ -3,7 +3,7 @@ Description=Timer: STRATUM auto-update from GitHub
 Documentation=file:///opt/stratum/docs/DEPLOY_DEBIAN.md
 
 [Timer]
-# polling backup: каждые 2 минуты (мгновенно — GitHub webhook на push в main)
+# polling origin/main каждые ~2 минуты
 OnBootSec=1min
 OnUnitActiveSec=2min
 RandomizedDelaySec=20s

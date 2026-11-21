@@ -1,23 +1,21 @@
 #!/usr/bin/env bash
-# Автообновление с GitHub при изменениях ветки main:
-#   • timer (polling) — запасной канал
-#   • webhook на push — мгновенно
+# Автообновление с GitHub: polling ветки main раз в ~2 минуты (systemd timer).
+# Webhook опционален: --webhook
 #
 # sudo bash deploy/debian/enable-auto-update.sh
-# sudo bash deploy/debian/enable-auto-update.sh --timer-only
-# sudo bash deploy/debian/enable-auto-update.sh --webhook-only
+# sudo bash deploy/debian/enable-auto-update.sh --webhook
 set -euo pipefail
 
 WITH_TIMER=1
-WITH_WEBHOOK=1
+WITH_WEBHOOK=0
 for arg in "$@"; do
   case "${arg}" in
     --timer-only) WITH_WEBHOOK=0; WITH_TIMER=1 ;;
     --webhook-only) WITH_WEBHOOK=1; WITH_TIMER=0 ;;
-    --webhook) WITH_WEBHOOK=1 ;; # backward compatible
+    --webhook) WITH_WEBHOOK=1 ;;
     --no-webhook) WITH_WEBHOOK=0 ;;
     -h|--help)
-      echo "Usage: $0 [--timer-only|--webhook-only|--no-webhook]"
+      echo "Usage: $0 [--webhook|--webhook-only|--timer-only]"
       exit 0
       ;;
   esac
